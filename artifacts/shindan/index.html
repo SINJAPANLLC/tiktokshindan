@@ -1081,16 +1081,34 @@
     }
     const card = document.getElementById('result-card');
     if (typeof html2canvas !== 'undefined') {
+      // html2canvasはCSSアニメーションを無視するため、
+      // fade-in の opacity:0 が残ったままになる → 一時的に除去して opacity:1 を明示
+      const animatedEls = card.querySelectorAll('.fade-in');
+      animatedEls.forEach(el => {
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+        el.style.animation = 'none';
+      });
+      card.style.opacity = '1';
+      card.style.animation = 'none';
       card.classList.add('snapshot-light');
-      // DOMへの反映を待ってからキャプチャ
-      requestAnimationFrame(() => {
+
+      setTimeout(() => {
         html2canvas(card, {
           scale: 2,
           backgroundColor: '#ffffff',
           useCORS: true,
           logging: false,
         }).then(canvas => {
+          // スタイルを元に戻す
           card.classList.remove('snapshot-light');
+          card.style.opacity = '';
+          card.style.animation = '';
+          animatedEls.forEach(el => {
+            el.style.opacity = '';
+            el.style.transform = '';
+            el.style.animation = '';
+          });
           const a = document.createElement('a');
           a.download = 'tiktok-diagnosis.png';
           a.href = canvas.toDataURL('image/png');
@@ -1098,9 +1116,16 @@
           showToast('保存しました');
         }).catch(() => {
           card.classList.remove('snapshot-light');
+          card.style.opacity = '';
+          card.style.animation = '';
+          animatedEls.forEach(el => {
+            el.style.opacity = '';
+            el.style.transform = '';
+            el.style.animation = '';
+          });
           showToast('保存に失敗しました');
         });
-      });
+      }, 60);
     } else {
       showToast('画面をスクショして保存してください');
     }
