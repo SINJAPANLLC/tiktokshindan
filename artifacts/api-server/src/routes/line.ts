@@ -36,27 +36,34 @@ async function replyMessage(replyToken: string, messages: object[]) {
   }
 }
 
-const RANK_EMOJI: Record<string, string> = {
-  GOD: "👑", S: "⭐", A: "🔥", B: "📈", C: "🌱",
+const RANK_COMMENT: Record<string, string> = {
+  GOD: "圧倒的な影響力を持つアカウントです。正しい戦略で収益化・ブランド化が現実になります。",
+  S:   "100万フォロワー超えの実力派。プロの戦略を組み合わせることで更なる飛躍が期待できます。",
+  A:   "バズの素地がある有望なアカウントです。コンテンツ戦略を整えれば急成長が見込めます。",
+  B:   "成長軌道に乗り始めているアカウントです。投稿の質と頻度を改善すれば次のステージへ進めます。",
+  C:   "これから伸びる可能性を秘めたアカウントです。正しい方向性で動けば半年後に大きく変わります。",
 };
 
 function buildDiagnosisText(user: typeof usersTable.$inferSelect): string {
   const rank = user.rank ?? "C";
-  const emoji = RANK_EMOJI[rank] ?? "📊";
   const diagDate = user.createdAt
     ? new Date(user.createdAt).toLocaleDateString("ja-JP")
     : "—";
+  const comment = RANK_COMMENT[rank] ?? "";
   return [
-    `${emoji} TikTok診断結果`,
-    "━━━━━━━━━━━━━━",
-    `アカウント: ${user.tiktokUsername ?? "不明"}`,
-    `ランク: ${rank} ${emoji}`,
-    `総合スコア: ${user.score ?? 0}/100点`,
-    `フォロワー: ${(user.followers ?? 0).toLocaleString()}人`,
-    `診断日: ${diagDate}`,
-    "━━━━━━━━━━━━━━",
-    "SIN JAPANのTikTokコンサルタントが",
-    "あなたのアカウント成長をサポートします！",
+    "[ TikTok診断結果 ]",
+    "─────────────────",
+    `アカウント : ${user.tiktokUsername ?? "不明"}`,
+    `ランク     : ${rank}`,
+    `総合スコア : ${user.score ?? 0} / 100点`,
+    `フォロワー : ${(user.followers ?? 0).toLocaleString()}人`,
+    `診断日     : ${diagDate}`,
+    "─────────────────",
+    comment,
+    "",
+    "より詳細なアカウント分析・成長戦略のご相談は",
+    "SIN JAPANの公式LINEへ",
+    "https://lin.ee/8j8NWHn",
   ].join("\n");
 }
 
@@ -115,7 +122,7 @@ router.post("/line-webhook", async (req, res) => {
         const existing = lineUserId ? await getDiagnosisByLineId(lineUserId) : null;
         if (existing) {
           await replyMessage(event.replyToken, [
-            { type: "text", text: "おかえりなさい！前回の診断結果をお届けします😊" },
+            { type: "text", text: "前回の診断結果をお届けします。" },
             { type: "text", text: buildDiagnosisText(existing) },
           ]);
         } else {
@@ -123,7 +130,7 @@ router.post("/line-webhook", async (req, res) => {
             {
               type: "text",
               text: [
-                "SIN JAPANのTikTok診断ツールへようこそ！🎉",
+                "SIN JAPANのTikTok診断ツールへようこそ。",
                 "",
                 "リッチメニューの「診断結果を見る」を",
                 "タップして診断結果を受け取ってください。",
@@ -148,8 +155,8 @@ router.post("/line-webhook", async (req, res) => {
               text: [
                 "診断結果を取得します。",
                 "",
-                "あなたのTikTokユーザー名を送ってください👇",
-                "（例: @yourusername）",
+                "あなたのTikTokユーザー名を送ってください。",
+                "例: @yourusername",
               ].join("\n"),
             },
           ]);
@@ -176,8 +183,8 @@ router.post("/line-webhook", async (req, res) => {
                 text: [
                   "診断結果を取得します。",
                   "",
-                  "あなたのTikTokユーザー名を送ってください👇",
-                  "（例: @yourusername）",
+                  "あなたのTikTokユーザー名を送ってください。",
+                  "例: @yourusername",
                 ].join("\n"),
               },
             ]);
@@ -189,7 +196,7 @@ router.post("/line-webhook", async (req, res) => {
           const user = await linkAndGetDiagnosis(lineUserId, text);
           if (user) {
             await replyMessage(event.replyToken, [
-              { type: "text", text: "紐付けが完了しました！診断結果をお届けします✅" },
+              { type: "text", text: "診断結果をお届けします。" },
               { type: "text", text: buildDiagnosisText(user) },
             ]);
           } else {
@@ -199,7 +206,7 @@ router.post("/line-webhook", async (req, res) => {
                 text: [
                   `「${text}」の診断データが見つかりませんでした。`,
                   "",
-                  "先に診断を受けてからもう一度お試しください👇",
+                  "先に診断を受けてからもう一度お試しください。",
                   "https://tiktokshindan.com",
                 ].join("\n"),
               },
@@ -220,7 +227,7 @@ router.post("/line-webhook", async (req, res) => {
                 text: [
                   `「${text}」の診断データが見つかりませんでした。`,
                   "",
-                  "まず下記で無料診断を受けてください👇",
+                  "まず下記で無料診断を受けてください。",
                   "https://tiktokshindan.com",
                 ].join("\n"),
               },

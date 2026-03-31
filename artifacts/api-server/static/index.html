@@ -653,6 +653,8 @@
     gap: 10px;
     animation: slide-left 52s linear infinite;
     width: max-content;
+    will-change: transform;
+    backface-visibility: hidden;
   }
   .slider-row:nth-child(2) {
     animation-direction: reverse;
@@ -1343,13 +1345,20 @@
       card.style.animation = 'none';
       card.classList.add('snapshot-light');
 
+      // 外部画像(unavatar等)をCORSエラー回避のため一時非表示
+      const cardImgs = card.querySelectorAll('img');
+      cardImgs.forEach(img => { img.dataset.origDisplay = img.style.display; img.style.display = 'none'; });
+
       setTimeout(() => {
         html2canvas(card, {
           scale: 2,
           backgroundColor: '#ffffff',
-          useCORS: true,
+          useCORS: false,
+          allowTaint: false,
           logging: false,
         }).then(canvas => {
+          // 外部画像を元に戻す
+          cardImgs.forEach(img => { img.style.display = img.dataset.origDisplay || ''; });
           card.classList.remove('snapshot-light');
           card.style.opacity = '';
           card.style.animation = '';
@@ -1358,28 +1367,27 @@
             el.style.transform = '';
             el.style.animation = '';
           });
-          const dataUrl = canvas.toDataURL('image/png');
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-          if (isIOS) {
-            // iOSは a.click() ダウンロードが動作しないため新しいタブで開く
-            const w = window.open('');
-            if (w) {
-              w.document.write(`<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>診断結果</title></head><body style="margin:0;background:#000;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px;box-sizing:border-box"><img src="${dataUrl}" style="max-width:100%;border-radius:8px"><p style="color:#fff;font-size:14px;margin-top:16px;text-align:center;font-family:sans-serif">画像を長押しして「写真に追加」を選んでください</p></body></html>`);
-              w.document.close();
-              showToast('長押しで保存できます');
-            } else {
-              showToast('ポップアップをブロックしています。解除してください');
-            }
+          let dataUrl;
+          try { dataUrl = canvas.toDataURL('image/png'); } catch(e) {
+            showToast('画面をスクショして保存してください'); return;
+          }
+          // Web Share API（モバイル対応・iOS/Android両方）
+          if (navigator.share && navigator.canShare) {
+            canvas.toBlob(async blob => {
+              try {
+                const file = new File([blob], 'tiktok-diagnosis.png', { type: 'image/png' });
+                if (navigator.canShare({ files: [file] })) {
+                  await navigator.share({ files: [file], title: 'TikTok診断結果' });
+                  return;
+                }
+              } catch(e) { /* fallthrough */ }
+              downloadOrOpenTab(dataUrl);
+            }, 'image/png');
           } else {
-            const a = document.createElement('a');
-            a.download = 'tiktok-diagnosis.png';
-            a.href = dataUrl;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showToast('保存しました');
+            downloadOrOpenTab(dataUrl);
           }
         }).catch(() => {
+          cardImgs.forEach(img => { img.style.display = img.dataset.origDisplay || ''; });
           card.classList.remove('snapshot-light');
           card.style.opacity = '';
           card.style.animation = '';
@@ -1390,7 +1398,29 @@
           });
           showToast('画面をスクショして保存してください');
         });
-      }, 60);
+      }, 80);
+
+      function downloadOrOpenTab(dataUrl) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+          const w = window.open('');
+          if (w) {
+            w.document.write(`<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>診断結果</title></head><body style="margin:0;background:#000;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px;box-sizing:border-box"><img src="${dataUrl}" style="max-width:100%;border-radius:8px"><p style="color:#fff;font-size:14px;margin-top:16px;text-align:center;font-family:sans-serif">画像を長押しして「写真に追加」を選んでください</p></body></html>`);
+            w.document.close();
+            showToast('長押しで保存できます');
+          } else {
+            showToast('ポップアップをブロックしています。解除してください');
+          }
+        } else {
+          const a = document.createElement('a');
+          a.download = 'tiktok-diagnosis.png';
+          a.href = dataUrl;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showToast('保存しました');
+        }
+      }
     } else {
       showToast('画面をスクショして保存してください');
     }
