@@ -70,6 +70,49 @@
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
   }
+
+  /* ===== RESPONSIVE ===== */
+  @media (min-width: 700px) {
+    .container { max-width: 680px; padding: 0 40px; }
+
+    #screen-upload { padding: 64px 0 80px; }
+
+    /* 2カラムレイアウト（テキスト左、アップロード右） */
+    .upload-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+    .upload-col-left { }
+    .upload-col-right { }
+
+    .page-title { font-size: 72px; }
+    .page-desc { margin-bottom: 0; }
+    .logo { margin-bottom: 40px; }
+
+    /* 結果画面 */
+    #screen-result { padding: 64px 0 100px; }
+    #result-card { padding: 44px 40px 36px; }
+    .rank-badge { font-size: 100px; }
+    .rank-title { font-size: 28px; }
+  }
+
+  @media (min-width: 960px) {
+    .container { max-width: 860px; padding: 0 48px; }
+    .upload-layout { gap: 80px; }
+    .page-title { font-size: 88px; }
+
+    /* 結果画面2カラム */
+    .result-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+    .result-col-left { }
+    .result-col-right { }
+  }
   .upload-zone:hover, .upload-zone.dragover {
     border-color: var(--black);
     border-style: solid;
@@ -576,26 +619,31 @@
   </div>
 
   <div class="container">
-    <div class="logo">無料診断</div>
-    <h1 class="page-title">TIKTOK<br>ACCOUNT</h1>
-    <div class="divider"></div>
-    <p class="page-desc">プロフィール画面のスクリーンショットを<br>アップロードするだけ。AIが30秒で<br>あなたのTikTokを完全解析します。</p>
+    <div class="upload-layout">
+      <div class="upload-col-left">
+        <div class="logo">無料診断</div>
+        <h1 class="page-title">TIKTOK<br>ACCOUNT</h1>
+        <div class="divider"></div>
+        <p class="page-desc">プロフィール画面のスクリーンショットを<br>アップロードするだけ。AIが30秒で<br>あなたのTikTokを完全解析します。</p>
+      </div>
+      <div class="upload-col-right">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-label">スクショをアップロード</div>
+          <div class="upload-sub">TikTokのプロフィール画面<br>（フォロワー数・いいね数が見えるもの）</div>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
 
-    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <div class="upload-label">スクショをアップロード</div>
-      <div class="upload-sub">TikTokのプロフィール画面<br>（フォロワー数・いいね数が見えるもの）</div>
-      <input type="file" id="fileInput" accept="image/*">
+        <div class="preview-wrap" id="previewWrap">
+          <img id="previewImg" src="" alt="">
+          <div class="preview-tag">選択済み</div>
+        </div>
+
+        <button class="btn-main" id="btnDiagnose" disabled onclick="startDiagnosis()">
+          今すぐ無料診断する
+        </button>
+        <p class="hint">完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒</p>
+      </div>
     </div>
-
-    <div class="preview-wrap" id="previewWrap">
-      <img id="previewImg" src="" alt="">
-      <div class="preview-tag">選択済み</div>
-    </div>
-
-    <button class="btn-main" id="btnDiagnose" disabled onclick="startDiagnosis()">
-      今すぐ無料診断する
-    </button>
-    <p class="hint">完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒</p>
   </div>
 </div>
 
@@ -613,59 +661,66 @@
 <!-- SCREEN 3 -->
 <div id="screen-result">
   <div class="container">
+    <div class="result-layout">
 
-    <!-- 結果カード（スクショ対象） -->
-    <div id="result-card" class="fade-in d1">
-      <!-- ユーザー情報 -->
-      <div class="card-user">
-        <div class="card-avatar" id="cardAvatar">
-          <img id="cardAvatarImg" src="" alt="" style="display:none;">
-          <span id="cardAvatarEmoji"></span>
+      <!-- 左カラム：結果カード -->
+      <div class="result-col-left">
+        <div id="result-card" class="fade-in d1">
+          <!-- ユーザー情報 -->
+          <div class="card-user">
+            <div class="card-avatar" id="cardAvatar">
+              <img id="cardAvatarImg" src="" alt="" style="display:none;">
+              <span id="cardAvatarEmoji"></span>
+            </div>
+            <div class="card-user-info">
+              <div class="card-username" id="cardUsername">@username</div>
+              <div class="card-date" id="cardDate"></div>
+            </div>
+            <div class="card-brand"></div>
+          </div>
+
+          <!-- ランク -->
+          <div class="card-rank-wrap">
+            <div class="rank-badge" id="rankBadge">S</div>
+            <div class="rank-label-wrap">
+              <div class="rank-label">診断ランク</div>
+              <div class="rank-title" id="rankTitle">—</div>
+            </div>
+          </div>
+
+          <div class="card-desc" id="cardDesc">—</div>
+
+          <div class="card-scores" id="cardScores"></div>
+
+          <div class="card-total">
+            <div class="card-total-label">総合スコア</div>
+            <div class="card-total-num" id="totalNum">0</div>
+            <div class="card-total-max">/ 100</div>
+          </div>
         </div>
-        <div class="card-user-info">
-          <div class="card-username" id="cardUsername">@username</div>
-          <div class="card-date" id="cardDate"></div>
-        </div>
-        <div class="card-brand"></div>
       </div>
 
-      <!-- ランク -->
-      <div class="card-rank-wrap">
-        <div class="rank-badge" id="rankBadge">S</div>
-        <div class="rank-label-wrap">
-          <div class="rank-label">診断ランク</div>
-          <div class="rank-title" id="rankTitle">—</div>
+      <!-- 右カラム：分析詳細 + アクション -->
+      <div class="result-col-right">
+        <!-- 分析詳細 -->
+        <div class="analysis-wrap fade-in d2" id="analysisWrap"></div>
+
+        <!-- スクショ案内 -->
+        <div class="screenshot-guide fade-in d3">
+          <div class="screenshot-guide-title">この診断結果をスクショしてTikTokに投稿しよう</div>
+        </div>
+
+        <button class="btn-copy fade-in d4" onclick="saveResult()">
+          診断結果を保存する
+        </button>
+
+        <div class="line-cta fade-in d5">
+          <div class="line-cta-title">詳細レポートを無料で受け取る</div>
+          <a href="#" class="btn-line">LINEで受け取る（無料）</a>
         </div>
       </div>
 
-      <div class="card-desc" id="cardDesc">—</div>
-
-      <div class="card-scores" id="cardScores"></div>
-
-      <div class="card-total">
-        <div class="card-total-label">総合スコア</div>
-        <div class="card-total-num" id="totalNum">0</div>
-        <div class="card-total-max">/ 100</div>
-      </div>
     </div>
-
-    <!-- 分析詳細 -->
-    <div class="analysis-wrap fade-in d2" id="analysisWrap"></div>
-
-    <!-- スクショ案内 -->
-    <div class="screenshot-guide fade-in d3">
-      <div class="screenshot-guide-title">この診断結果をスクショしてTikTokに投稿しよう</div>
-    </div>
-
-    <button class="btn-copy fade-in d4" onclick="saveResult()">
-      診断結果を保存する
-    </button>
-
-    <div class="line-cta fade-in d5">
-      <div class="line-cta-title">詳細レポートを無料で受け取る</div>
-      <a href="#" class="btn-line">LINEで受け取る（無料）</a>
-    </div>
-
   </div>
 </div>
 
