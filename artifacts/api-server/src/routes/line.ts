@@ -102,9 +102,11 @@ router.post("/line-webhook", async (req, res) => {
   res.status(200).send("OK");
 
   const events: any[] = (req.body as any).events ?? [];
+  console.log(`[LINE] received ${events.length} event(s)`);
 
   for (const event of events) {
     try {
+      console.log(`[LINE] event type=${event.type} text=${event.message?.text ?? event.postback?.data ?? ""}`);
       const lineUserId: string = event.source?.userId ?? "";
 
       // ===== 友達追加 =====
@@ -130,12 +132,35 @@ router.post("/line-webhook", async (req, res) => {
           ]);
         }
 
+      // ===== postback（リッチメニューボタン）=====
+      } else if (event.type === "postback") {
+        const data: string = (event.postback?.data ?? "").trim();
+        const existing = lineUserId ? await getDiagnosisByLineId(lineUserId) : null;
+        if (existing) {
+          await replyMessage(event.replyToken, [
+            { type: "text", text: buildDiagnosisText(existing) },
+          ]);
+        } else {
+          if (lineUserId) pendingUsername.set(lineUserId, true);
+          await replyMessage(event.replyToken, [
+            {
+              type: "text",
+              text: [
+                "診断結果を取得します。",
+                "",
+                "あなたのTikTokユーザー名を送ってください👇",
+                "（例: @yourusername）",
+              ].join("\n"),
+            },
+          ]);
+        }
+
       // ===== テキストメッセージ =====
       } else if (event.type === "message" && event.message?.type === "text") {
         const text: string = event.message.text.trim();
 
-        // ① リッチメニューの「診断結果を見る」トリガー
-        if (text === "診断結果を見る") {
+        // ① リッチメニューの「診断結果を見る」トリガー（全角スペース等に対応）
+        if (text === "診断結果を見る" || text.includes("診断結果を見る")) {
           const existing = lineUserId ? await getDiagnosisByLineId(lineUserId) : null;
           if (existing) {
             // 紐付け済み → すぐに診断結果を送信
