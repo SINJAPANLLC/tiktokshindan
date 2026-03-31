@@ -31,7 +31,7 @@
     padding: 52px 0 60px;
   }
   .logo {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.35em;
     color: var(--gray4);
@@ -64,7 +64,7 @@
   }
   /* ===== RESPONSIVE ===== */
   @media (min-width: 700px) {
-    .container { max-width: 680px; padding: 0 40px; }
+    .container { max-width: 720px; padding: 0 40px; }
 
     #screen-upload { padding: 64px 0 80px; }
 
@@ -73,10 +73,8 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 60px;
-      align-items: start;
+      align-items: center;
     }
-    .upload-col-left { }
-    .upload-col-right { }
 
     .page-title { font-size: 72px; }
     .page-desc { margin-bottom: 0; }
@@ -90,9 +88,9 @@
   }
 
   @media (min-width: 960px) {
-    .container { max-width: 860px; padding: 0 48px; }
-    .upload-layout { gap: 80px; }
-    .page-title { font-size: 88px; }
+    .container { max-width: 960px; padding: 0 60px; }
+    .upload-layout { gap: 100px; grid-template-columns: 1.1fr 0.9fr; }
+    .page-title { font-size: 100px; }
 
     /* 結果画面2カラム */
     .result-layout {
@@ -103,6 +101,23 @@
     }
     .result-col-left { }
     .result-col-right { }
+  }
+
+  @media (min-width: 1280px) {
+    .container { max-width: 1200px; padding: 0 80px; }
+    .upload-layout { gap: 140px; }
+    .page-title { font-size: 120px; }
+    #screen-upload { padding-top: 0; padding-bottom: 0; }
+    #screen-upload > .container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding-top: 60px;
+      padding-bottom: 80px;
+    }
+    #screen-upload > .container > .upload-layout {
+      width: 100%;
+    }
   }
   .btn-main {
     display: block;
@@ -531,12 +546,12 @@
   .slider-row {
     display: flex;
     gap: 10px;
-    animation: slide-left 32s linear infinite;
+    animation: slide-left 52s linear infinite;
     width: max-content;
   }
   .slider-row:nth-child(2) {
     animation-direction: reverse;
-    animation-duration: 40s;
+    animation-duration: 66s;
     margin-top: 10px;
   }
   @keyframes slide-left {
