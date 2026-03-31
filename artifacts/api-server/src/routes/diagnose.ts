@@ -103,7 +103,7 @@ const rankDescs: Record<string, string> = {
   C: "現状はまだ成長途中。改善ポイントが明確な分、伸びしろは全ランク中で最大だ。",
 };
 
-// ===== 共通スコア計算 =====
+// ===== 共通スコア計算（フォールバック用） =====
 function calcScores(followers: number, likes: number, hasBio: boolean, isBusiness: boolean) {
   const safeFollowers = Math.max(0, followers || 0);
   const safeLikes = Math.max(0, likes || 0);
@@ -121,6 +121,86 @@ function calcScores(followers: number, likes: number, hasBio: boolean, isBusines
   else if (total >= 50) rank = "B";
   else rank = "C";
   return { buzzPotential, engagementScore, profileScore, consistencyScore, monetizationScore, total, rank };
+}
+
+// ===== GPT-4o AI解析 =====
+interface AiAnalysis {
+  rank: string; title: string; desc: string;
+  buzzPotential: number; engagementScore: number;
+  profileScore: number; consistencyScore: number; monetizationScore: number;
+  total: number;
+  goods: string[]; bads: string[]; nexts: string[];
+}
+
+async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const engagement = profile.followers > 0
+    ? ((profile.likes / profile.followers) * 100).toFixed(2)
+    : "0";
+
+  const prompt = `あなたはTikTokマーケティングの専門家です。以下のアカウントデータを分析し、診断結果をJSONのみで返してください（Markdownコードブロック不要）。
+
+アカウント: ${profile.tiktok_username}
+フォロワー数: ${profile.followers.toLocaleString()}人
+総いいね数: ${profile.likes.toLocaleString()}
+動画本数: ${profile.videoCount}本
+エンゲージメント率(総いいね÷フォロワー): ${engagement}%
+プロフィール文: "${profile.bio || "（未設定）"}"
+公認バッジ: ${profile.verified ? "あり" : "なし"}
+ビジネスアカウント: ${profile.is_business ? "はい" : "いいえ"}
+
+返却JSON形式:
+{
+  "rank": "C",
+  "title": "診断タイトル（15文字以内のキャッチコピー）",
+  "desc": "このアカウントの診断説明（60文字以内、具体的に）",
+  "buzzPotential": 45,
+  "engagementScore": 60,
+  "profileScore": 50,
+  "consistencyScore": 55,
+  "monetizationScore": 40,
+  "total": 50,
+  "goods": ["強み1（具体的に）", "強み2（具体的に）"],
+  "bads": ["改善点1（具体的に）", "改善点2（具体的に）"],
+  "nexts": ["今すぐできる具体的アクション1", "今すぐできる具体的アクション2"]
+}
+
+ランク基準:
+- GOD: total 90以上（トップクリエイター・完成されたアカウント）
+- S: 78〜89（強い影響力・高エンゲージメント）
+- A: 65〜77（成長中・伸び代大）
+- B: 50〜64（改善で伸びる余地あり）
+- C: 49以下（初期段階・基礎強化が必要）
+
+各スコア(0-100)はデータに基づいてリアルかつ辛口に評価すること。`;
+
+  const aiRes = await openai.chat.completions.create({
+    model: "gpt-4o",
+    max_tokens: 900,
+    temperature: 0.6,
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const raw = aiRes.choices[0]?.message?.content || "";
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("AI response parse failed");
+  const p = JSON.parse(jsonMatch[0]);
+
+  const clamp = (v: unknown) => Math.min(100, Math.max(0, Number(v) || 0));
+  return {
+    rank: String(p.rank || "C"),
+    title: String(p.title || rankTitles[String(p.rank || "C")] || ""),
+    desc: String(p.desc || rankDescs[String(p.rank || "C")] || ""),
+    buzzPotential: clamp(p.buzzPotential),
+    engagementScore: clamp(p.engagementScore),
+    profileScore: clamp(p.profileScore),
+    consistencyScore: clamp(p.consistencyScore),
+    monetizationScore: clamp(p.monetizationScore),
+    total: clamp(p.total),
+    goods: Array.isArray(p.goods) ? p.goods.map(String) : [],
+    bads: Array.isArray(p.bads) ? p.bads.map(String) : [],
+    nexts: Array.isArray(p.nexts) ? p.nexts.map(String) : [],
+  };
 }
 
 async function getGeo(req: { headers: Record<string, string | string[] | undefined>, socket: { remoteAddress?: string } }) {
@@ -224,14 +304,29 @@ router.post("/diagnose-by-username", async (req, res) => {
     return;
   }
 
-  const scores = calcScores(profile.followers, profile.likes, !!profile.bio, profile.is_business);
+  // GPT-4o AI解析（失敗時は数式フォールバック）
+  let ai: AiAnalysis;
+  try {
+    ai = await analyzeWithAI(profile);
+  } catch (err) {
+    req.log.warn({ err }, "AI analysis failed, falling back to formula");
+    const s = calcScores(profile.followers, profile.likes, !!profile.bio, profile.is_business);
+    ai = {
+      rank: s.rank, title: rankTitles[s.rank], desc: rankDescs[s.rank],
+      buzzPotential: s.buzzPotential, engagementScore: s.engagementScore,
+      profileScore: s.profileScore, consistencyScore: s.consistencyScore,
+      monetizationScore: s.monetizationScore, total: s.total,
+      goods: [], bads: [], nexts: [],
+    };
+  }
+
   const { pref, city } = await getGeo(req as Parameters<typeof getGeo>[0]);
   const userId = uuidv4();
 
   await db.insert(usersTable).values({
     id: userId,
     tiktokUsername: profile.tiktok_username,
-    followers: profile.followers, rank: scores.rank, score: scores.total,
+    followers: profile.followers, rank: ai.rank, score: ai.total,
     pref, city,
     device: device.substring(0, 100), browser: "", language, network,
     screenSize: screen, dwellTime: 0, scrollDepth: 0, operationCount: 0,
@@ -240,8 +335,24 @@ router.post("/diagnose-by-username", async (req, res) => {
     genre: profile.genre,
   });
 
+  const tiktokUsername = profile.tiktok_username || "@" + username.replace(/^@/, "");
   res.json({
-    ...buildResponse(scores.rank, scores.total, userId, profile.tiktok_username || "@" + username.replace(/^@/, ""), profile.followers, scores),
+    rank: ai.rank,
+    title: ai.title,
+    desc: ai.desc,
+    total: ai.total,
+    user_id: userId,
+    tiktok_username: tiktokUsername,
+    scores: [
+      { name: "バズポテンシャル", val: ai.buzzPotential },
+      { name: "エンゲージメント率", val: ai.engagementScore },
+      { name: "プロフィール訴求力", val: ai.profileScore },
+      { name: "コンテンツの一貫性", val: ai.consistencyScore },
+      { name: "収益化の準備度", val: ai.monetizationScore },
+    ],
+    goods: ai.goods,
+    bads: ai.bads,
+    nexts: ai.nexts,
     verified: profile.verified,
     followers: profile.followers,
     following: profile.following,

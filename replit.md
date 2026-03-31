@@ -21,13 +21,19 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ### TikTok診断ツール (SIN JAPAN)
 
-A TikTok account diagnostic tool. Users upload a screenshot of their TikTok profile, Claude Vision AI analyzes it, and the app returns a rank (GOD/S/A/B/C) with scores and advice.
+TikTok account diagnostic tool. User enters @username → server scrapes TikTok public profile → GPT-4o AI analyzes it → returns personalized rank (C/B/A/S/GOD), score breakdown, title/desc. Detailed AI advice (goods/bads/nexts) is stored in DB for LINE follow-up. Result screen shows rank+scores + LINE CTA (no detailed advice on screen).
 
-- **Frontend**: `artifacts/api-server/static/index.html` — diagnosis tool
-- **Admin**: `artifacts/api-server/static/admin.html` — admin dashboard (password: sinjapan2025)
-- **API Routes**: `artifacts/api-server/src/routes/diagnose.ts`, `admin.ts`
+- **Frontend**: `artifacts/shindan/index.html` — Vite-built diagnosis tool (port 19356)
+- **Admin**: `artifacts/shindan/admin.html` — admin dashboard (password: sinjapan2025)
+- **API server**: `artifacts/api-server/` — Express API (port 8080)
+- **Key route**: `artifacts/api-server/src/routes/diagnose.ts`
+  - `POST /api/diagnose-by-username` → scrapes TikTok → `analyzeWithAI()` with GPT-4o → returns rank/scores/AI title/desc/goods/bads/nexts
+  - `POST /api/save-result`, `POST /api/line-register`
 - **DB schema**: `lib/db/src/schema/users.ts` — `tiktok_users` table
-- **Paths**: `/` (frontend), `/admin` (admin panel), `/api/*` (API)
+- **TikTok scraping**: mobile UA → parse `__UNIVERSAL_DATA_FOR_REHYDRATION__` → `webapp.user-detail.userInfo`; uses `heart` field for likes (not `heartCount`)
+- **LINE URL**: configured in `artifacts/shindan/index.html` as `LINE_URL` const (currently placeholder `https://lin.ee/XXXXXXX`)
+- **Avatar**: `https://unavatar.io/tiktok/{username}` with letter fallback
+- **AI**: GPT-4o via `OPENAI_API_KEY` secret; falls back to formula if AI fails
 
 ## Structure
 

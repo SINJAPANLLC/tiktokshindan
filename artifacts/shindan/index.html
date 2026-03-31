@@ -391,57 +391,6 @@
   #result-card.snapshot-light .card-total-max { color: #bbb !important; }
 
   /* 分析 */
-  .analysis-wrap {
-    border: 1px solid var(--gray5);
-    border-radius: 6px;
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
-  .analysis-row {
-    padding: 18px 22px;
-    border-bottom: 1px solid var(--gray5);
-  }
-  .analysis-row:last-child { border-bottom: none; }
-  .analysis-row-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--gray4);
-    margin-bottom: 12px;
-  }
-  .analysis-item {
-    font-size: 13px;
-    color: var(--black);
-    line-height: 1.8;
-    font-weight: 300;
-    padding: 7px 0;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  .analysis-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .analysis-item:first-child { padding-top: 0; }
-
-  /* スクショ案内 */
-  .screenshot-guide {
-    background: var(--black);
-    color: var(--white);
-    border-radius: 6px;
-    padding: 16px 22px;
-    margin-bottom: 10px;
-    text-align: center;
-  }
-  .screenshot-guide-title {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    margin-bottom: 4px;
-  }
-  .screenshot-guide-sub {
-    font-size: 11px;
-    color: rgba(255,255,255,0.4);
-    font-weight: 300;
-    line-height: 1.6;
-  }
   .btn-copy {
     display: block;
     width: 100%;
@@ -456,30 +405,54 @@
     font-family: 'Noto Sans JP', sans-serif;
     cursor: pointer;
     transition: all 0.2s;
-    margin-bottom: 20px;
+    margin-bottom: 0;
+    margin-top: 12px;
   }
   .btn-copy:hover { background: var(--black); color: var(--white); }
 
-  /* LINE */
+  /* LINE CTA */
   .line-cta {
-    border: 1px solid var(--gray5);
-    border-radius: 6px;
-    padding: 22px;
+    background: var(--black);
+    color: var(--white);
+    border-radius: 10px;
+    padding: 28px 24px 24px;
+    margin-bottom: 0;
+  }
+  .line-cta-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #06c755;
+    border: 1px solid #06c755;
+    border-radius: 3px;
+    padding: 3px 8px;
+    margin-bottom: 16px;
   }
   .line-cta-title {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 6px;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.4;
+    margin-bottom: 14px;
+    letter-spacing: 0.02em;
   }
-  .line-cta-sub {
+  .line-cta-desc {
     font-size: 12px;
-    color: var(--gray3);
-    line-height: 1.8;
-    margin-bottom: 18px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.9;
+    margin-bottom: 22px;
     font-weight: 300;
   }
+  .line-cta-desc strong {
+    color: rgba(255,255,255,0.9);
+    font-weight: 700;
+  }
   .btn-line {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
     padding: 16px;
     background: #06c755;
@@ -494,8 +467,16 @@
     text-align: center;
     text-decoration: none;
     transition: background 0.2s;
+    margin-bottom: 12px;
   }
   .btn-line:hover { background: #05b34c; }
+  .line-cta-note {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
 
   /* ユーザー名入力 */
   .username-input-wrap {
@@ -704,7 +685,7 @@
     <div class="loading-bar-wrap">
       <div class="loading-bar-fill" id="loadingBar"></div>
     </div>
-    <div class="loading-step-text" id="loadingStepText">画像を読み込み中</div>
+    <div class="loading-step-text" id="loadingStepText">アカウントを取得中</div>
   </div>
 </div>
 
@@ -750,24 +731,23 @@
         </div>
       </div>
 
-      <!-- 右カラム：分析詳細 + アクション -->
+      <!-- 右カラム：LINE CTA + アクション -->
       <div class="result-col-right">
-        <!-- 分析詳細 -->
-        <div class="analysis-wrap fade-in d2" id="analysisWrap"></div>
-
-        <!-- スクショ案内 -->
-        <div class="screenshot-guide fade-in d3">
-          <div class="screenshot-guide-title">この診断結果をスクショしてTikTokに投稿しよう</div>
+        <!-- LINE CTA -->
+        <div class="line-cta fade-in d2">
+          <div class="line-cta-badge">AI解析完了</div>
+          <div class="line-cta-title">詳しい改善アドバイスを<br>LINEで無料お届け</div>
+          <div class="line-cta-desc">AIが発見した<strong>あなたのアカウント固有の強み・弱み・今すぐやるべきこと</strong>を、SIN JAPANのコンサルタントが詳しく解説します。</div>
+          <a href="#" class="btn-line" id="btnLine" onclick="trackLine()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.04 2 11.04c0 3.44 2.04 6.46 5.08 8.24l-.6 2.24c-.08.3.24.56.5.4l2.64-1.58c.74.1 1.5.16 2.28.16 5.52 0 10-4.04 10-9.04C22 6.04 17.52 2 12 2z"/></svg>
+            LINEで詳細を受け取る（無料）
+          </a>
+          <p class="line-cta-note">登録不要 &nbsp;·&nbsp; 完全無料</p>
         </div>
 
-        <button class="btn-copy fade-in d4" onclick="saveResult()">
+        <button class="btn-copy fade-in d3" onclick="saveResult()">
           診断結果を保存する
         </button>
-
-        <div class="line-cta fade-in d5">
-          <div class="line-cta-title">詳細レポートを無料で受け取る</div>
-          <a href="#" class="btn-line">LINEで受け取る（無料）</a>
-        </div>
       </div>
 
     </div>
@@ -777,8 +757,24 @@
 <div class="toast" id="toast">コピーしました</div>
 
 <script>
+  // ===== LINE URL設定 =====
+  // TODO: SIN JAPANのLINE公式アカウントURLに変更してください
+  const LINE_URL = 'https://lin.ee/XXXXXXX';
+  document.getElementById('btnLine').href = LINE_URL;
+
   const btnDiagnose = document.getElementById('btnDiagnose');
   let captionText = '';
+
+  function trackLine() {
+    // LINEボタンタップをDBに記録
+    if (currentUserId) {
+      fetch('/api/line-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId }),
+      }).catch(() => {});
+    }
+  }
 
   function onUsernameInput() {
     const val = document.getElementById('usernameInput').value.trim();
@@ -786,11 +782,11 @@
   }
 
   const loadingSteps = [
-    'プロフィールを取得中',
+    'アカウントを取得中',
     'フォロワーデータを解析中',
     'エンゲージメントを計測中',
-    'バズポテンシャルを診断中',
-    '診断結果を生成中',
+    'AIがバズポテンシャルを診断中',
+    'AIが診断結果を生成中',
   ];
 
   let currentUserId = null;
@@ -806,14 +802,14 @@
     let stepIdx = 0;
 
     const iv = setInterval(() => {
-      progress = Math.min(progress + 2, 85);
+      progress = Math.min(progress + 1, 88);
       bar.style.width = progress + '%';
-      if (progress % 20 === 0 && stepIdx < loadingSteps.length - 1) {
+      if (progress % 22 === 0 && stepIdx < loadingSteps.length - 1) {
         stepIdx++;
         stepText.style.opacity = '0';
         setTimeout(() => { stepText.textContent = loadingSteps[stepIdx]; stepText.style.opacity = '1'; }, 200);
       }
-    }, 80);
+    }, 180);
 
     const commonParams = {
       device: navigator.userAgent,
@@ -1035,21 +1031,6 @@
           <div class="card-score-fill" data-val="${s.val}"></div>
         </div>
       </div>`).join('');
-
-    // 分析
-    document.getElementById('analysisWrap').innerHTML = `
-      <div class="analysis-row">
-        <div class="analysis-row-label">強み</div>
-        ${r.goods.map(g => `<div class="analysis-item">${g}</div>`).join('')}
-      </div>
-      <div class="analysis-row">
-        <div class="analysis-row-label">改善ポイント</div>
-        ${r.bads.map(b => `<div class="analysis-item">${b}</div>`).join('')}
-      </div>
-      <div class="analysis-row">
-        <div class="analysis-row-label">次にやること</div>
-        ${r.nexts.map(n => `<div class="analysis-item">${n}</div>`).join('')}
-      </div>`;
 
     // スコアバーアニメ
     setTimeout(() => {
