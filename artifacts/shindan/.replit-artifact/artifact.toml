@@ -1,0 +1,35 @@
+kind = "web"
+previewPath = "/"
+title = "TikTok診断ツール"
+version = "1.0.0"
+id = "artifacts/shindan"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/", "/admin" ]
+localPort = 19356
+
+[services.development]
+run = "pnpm --filter @workspace/shindan run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/shindan", "run", "build" ]
+publicDir = "artifacts/shindan/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/admin"
+to = "/admin.html"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19356"
+BASE_PATH = "/"

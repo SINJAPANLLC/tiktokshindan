@@ -1,0 +1,17 @@
+kind = "web"
+previewPath = "/"
+title = "TikTok診断ツール"
+version = "1.0.0"
+id = "tiktok-shindan-web-01"
+
+[[services]]
+localPort = 8082
+name = "TikTok診断ツール"
+paths = ["/", "/admin"]
+
+[services.env]
+PORT = "8082"
+BASE_PATH = "/"
+
+[services.development]
+run = "pnpm --filter @workspace/tiktok-shindan run dev"
