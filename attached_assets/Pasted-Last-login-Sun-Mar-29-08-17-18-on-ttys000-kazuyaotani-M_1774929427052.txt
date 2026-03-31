@@ -1,0 +1,52 @@
+Last login: Sun Mar 29 08:17:18 on ttys000
+kazuyaotani@Mac ~ % ssh root@212.85.24.206
+root@212.85.24.206's password: 
+Welcome to Ubuntu 24.04.4 LTS (GNU/Linux 6.8.0-88-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Tue Mar 31 03:56:53 UTC 2026
+
+  System load:  0.03                Processes:             156
+  Usage of /:   15.7% of 192.69GB   Users logged in:       0
+  Memory usage: 27%                 IPv4 address for eth0: 212.85.24.206
+  Swap usage:   0%                  IPv6 address for eth0: 2a02:4780:59:cc86::1
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+18 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+13 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+1 updates could not be installed automatically. For more details,
+see /var/log/unattended-upgrades/unattended-upgrades.log
+
+*** System restart required ***
+Last login: Sat Mar 28 23:18:13 2026 from 59.132.57.148
+root@srv1087935:~# pm2 list
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 22 │ aiagent            │ fork     │ 20   │ online    │ 0%       │ 180.4mb  │
+│ 20 │ keimatch           │ fork     │ 4    │ online    │ 0%       │ 535.7mb  │
+│ 3  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 143.1mb  │
+│ 34 │ onlyu              │ fork     │ 84   │ online    │ 0%       │ 139.1mb  │
+│ 37 │ sinjapan-crm-api   │ fork     │ 0    │ online    │ 0%       │ 133.9mb  │
+│ 1  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 2  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 102.5mb  │
+│ 25 │ sinjapanai         │ fork     │ 0    │ online    │ 0%       │ 112.5mb  │
+│ 30 │ sinjapanailive-api │ fork     │ 0    │ online    │ 0%       │ 117.1mb  │
+│ 39 │ sinjapanaisite-api │ fork     │ 4    │ online    │ 0%       │ 191.1mb  │
+│ 38 │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 228.0mb  │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:~# 
