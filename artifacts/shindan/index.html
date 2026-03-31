@@ -390,6 +390,55 @@
   #result-card.snapshot-light .card-total-num { color: #0d0d0d !important; }
   #result-card.snapshot-light .card-total-max { color: #bbb !important; }
 
+  /* 診断プレビュー */
+  .diag-preview {
+    border: 1px solid var(--gray5);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .diag-preview-header {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gray3);
+    padding: 14px 18px 10px;
+  }
+  .diag-preview-item {
+    padding: 12px 18px;
+    border-top: 1px solid var(--gray5);
+  }
+  .diag-preview-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 5px;
+    display: block;
+  }
+  .diag-preview-item.good .diag-preview-label { color: #06c755; }
+  .diag-preview-item.bad .diag-preview-label { color: #e04; }
+  .diag-preview-item p {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--black);
+    font-weight: 300;
+    margin: 0;
+  }
+  .diag-preview-lock {
+    padding: 14px 18px;
+    border-top: 1px solid var(--gray5);
+    background: #f9f9f9;
+    text-align: center;
+  }
+  .diag-preview-lock-text {
+    font-size: 11px;
+    color: var(--gray3);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
   /* スクショ案内 */
   .screenshot-guide {
     background: var(--black);
@@ -708,7 +757,7 @@
   <div class="container">
     <div class="result-layout">
 
-      <!-- 左カラム：結果カード -->
+      <!-- 左カラム：結果カード + LINE CTA -->
       <div class="result-col-left">
         <div id="result-card" class="fade-in d1">
           <!-- ユーザー情報 -->
@@ -743,11 +792,8 @@
             <div class="card-total-max">/ 100</div>
           </div>
         </div>
-      </div>
 
-      <!-- 右カラム：LINE CTA + アクション -->
-      <div class="result-col-right">
-        <!-- LINE CTA -->
+        <!-- LINE CTA（カード下） -->
         <div class="line-cta fade-in d2">
           <div class="line-cta-badge">AI解析完了</div>
           <div class="line-cta-title">詳しい診断結果をLINEで無料お届け</div>
@@ -757,6 +803,12 @@
             LINEで詳細を受け取る（無料）
           </a>
         </div>
+      </div>
+
+      <!-- 右カラム：診断プレビュー + アクション -->
+      <div class="result-col-right">
+        <!-- 診断プレビュー -->
+        <div class="diag-preview fade-in d2" id="diagPreview"></div>
 
         <!-- スクショ案内 -->
         <div class="screenshot-guide fade-in d3">
@@ -798,11 +850,11 @@
   }
 
   const loadingSteps = [
-    'アカウントを取得中',
-    'フォロワーデータを解析中',
-    'エンゲージメントを計測中',
-    'AIがバズポテンシャルを診断中',
-    'AIが診断結果を生成中',
+    'TikTokのデータを引っ張ってます',
+    'フォロワーを数えてます',
+    'エンゲージメントを解剖中',
+    'AIがガチ分析してます',
+    '診断結果まとめてます',
   ];
 
   let currentUserId = null;
@@ -1047,6 +1099,26 @@
           <div class="card-score-fill" data-val="${s.val}"></div>
         </div>
       </div>`).join('');
+
+    // 診断プレビュー
+    const previewEl = document.getElementById('diagPreview');
+    if (previewEl) {
+      const good = r.goods && r.goods[0] ? r.goods[0] : null;
+      const bad = r.bads && r.bads[0] ? r.bads[0] : null;
+      previewEl.innerHTML = `
+        <div class="diag-preview-header">AI 診断プレビュー</div>
+        ${good ? `<div class="diag-preview-item good">
+          <span class="diag-preview-label">✓ 強み</span>
+          <p>${good}</p>
+        </div>` : ''}
+        ${bad ? `<div class="diag-preview-item bad">
+          <span class="diag-preview-label">△ 改善ポイント</span>
+          <p>${bad}</p>
+        </div>` : ''}
+        <div class="diag-preview-lock">
+          <div class="diag-preview-lock-text">残りの詳細はLINEで受け取る →</div>
+        </div>`;
+    }
 
     // スコアバーアニメ
     setTimeout(() => {

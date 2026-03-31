@@ -88,19 +88,19 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const rankTitles: Record<string, string> = {
-  GOD: "TikTokの申し子",
-  S: "眠れる怪物",
-  A: "隠れた本物",
-  B: "爆発前夜",
-  C: "伸びしろしかない",
+  GOD: "完全にバズる人間",
+  S: "止まれない怪物",
+  A: "爆発まで秒読み",
+  B: "まだ本気出してない",
+  C: "伸びしろしか見えない",
 };
 
 const rankDescs: Record<string, string> = {
-  GOD: "フォロワー数・エンゲージメント・コンテンツの質、すべてが規格外だ。このアカウントは本物。",
-  S: "フォロワー数の規模を超えたエンゲージメントを持つ。正しい戦略があれば3ヶ月以内に爆発的な成長が見込める。",
-  A: "影響力の核となる要素はすでに揃っている。あとは収益化の仕組みを乗せるだけ。",
-  B: "アルゴリズムに乗りかけているシグナルが出ている。あと一押しでバズの連鎖が始まる。",
-  C: "現状はまだ成長途中。改善ポイントが明確な分、伸びしろは全ランク中で最大だ。",
+  GOD: "規格外。フォロワー数・エンゲージメント・影響力、全部が別次元だ。このアカウントはもはや現象。",
+  S: "すでに持っている影響力が別格。正しく動けば3桁万フォロワーも現実になる。",
+  A: "必要なものはほぼ揃ってる。一本のバズ動画がきっかけで、今の10倍に化ける素質がある。",
+  B: "ちゃんとやれば普通に伸びる。アルゴリズムが動き始めているシグナルが出てる。あとはやるかやらないか。",
+  C: "今はまだ仮の姿。正しく動けば半年後には別人のように成長している可能性がある。",
 };
 
 // ===== 共通スコア計算（フォールバック用） =====
@@ -115,10 +115,10 @@ function calcScores(followers: number, likes: number, hasBio: boolean, isBusines
   const monetizationScore = isBusiness ? 50 : 35;
   const total = Math.max(0, Math.floor((buzzPotential + engagementScore + profileScore + consistencyScore + monetizationScore) / 5));
   let rank: string;
-  if (total >= 78) rank = "GOD";
-  else if (total >= 65) rank = "S";
-  else if (total >= 52) rank = "A";
-  else if (total >= 38) rank = "B";
+  if (total >= 82) rank = "GOD";
+  else if (total >= 68) rank = "S";
+  else if (total >= 56) rank = "A";
+  else if (total >= 42) rank = "B";
   else rank = "C";
   return { buzzPotential, engagementScore, profileScore, consistencyScore, monetizationScore, total, rank };
 }
@@ -177,15 +177,17 @@ async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
   "nexts": ["今すぐできる具体的アクション1", "今すぐできる具体的アクション2"]
 }
 
-ランク基準（totalスコアで判定）:
-- GOD: 78以上（トップクリエイター・完全に完成されたアカウント）
-- S: 65〜77（強い影響力・インフルエンサー級）
-- A: 52〜64（成長中・大きな可能性あり）
-- B: 38〜51（伸び代あり・改善で飛躍できる）
-- C: 37以下（初期段階・基礎から強化）
+titleは「完全にバズる人間」「爆発まで秒読み」のような、インパクトがあってTikTokっぽい面白いコピーにすること。
 
-ランク分布目安: GOD 10%、S 20%、A 35%、B 25%、C 10%
-（多くのユーザーがAランク以上を取れるよう、全体的に高めのスコアをつけること）`;
+ランク基準（totalスコアで判定）:
+- GOD: 82以上（真のトップクリエイター・完成されたアカウント）
+- S: 68〜81（強い影響力・インフルエンサー級）
+- A: 56〜67（成長中・大きな可能性あり）
+- B: 42〜55（伸び代あり・改善で飛躍できる）
+- C: 41以下（初期段階・基礎から強化）
+
+ランク分布目安: GOD 5%、S 15%、A 35%、B 30%、C 15%
+（多くのユーザーがA〜Bランクに入るよう、バランス良く評価すること）`;
 
   const aiRes = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -203,10 +205,10 @@ async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
   const total = clamp(p.total);
   // totalから正確にランクを再計算（AIの申告ランクとズレを防ぐ）
   let rank: string;
-  if (total >= 78) rank = "GOD";
-  else if (total >= 65) rank = "S";
-  else if (total >= 52) rank = "A";
-  else if (total >= 38) rank = "B";
+  if (total >= 82) rank = "GOD";
+  else if (total >= 68) rank = "S";
+  else if (total >= 56) rank = "A";
+  else if (total >= 42) rank = "B";
   else rank = "C";
   return {
     rank,
