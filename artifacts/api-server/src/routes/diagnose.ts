@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -7,6 +7,79 @@ import OpenAI from "openai";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
+
+// ===== 1. 結果キャッシュ（ユーザー名ベース、TTL 10分） =====
+interface CacheEntry { data: unknown; expiresAt: number; }
+const resultCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10分
+const CACHE_MAX = 1000;
+
+function cacheGet(key: string): unknown | null {
+  const entry = resultCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) { resultCache.delete(key); return null; }
+  return entry.data;
+}
+function cacheSet(key: string, data: unknown) {
+  if (resultCache.size >= CACHE_MAX) {
+    // 最も古いエントリを削除
+    const firstKey = resultCache.keys().next().value;
+    if (firstKey) resultCache.delete(firstKey);
+  }
+  resultCache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+// ===== 2. IPレート制限（診断エンドポイント: 5回/分） =====
+interface RateEntry { count: number; resetAt: number; }
+const ipRateMap = new Map<string, RateEntry>();
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60 * 1000; // 1分
+
+function getClientIp(req: Request): string {
+  return ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim()
+    || req.socket.remoteAddress || "unknown";
+}
+function checkRateLimit(ip: string): { allowed: boolean; retryAfterSec: number } {
+  const now = Date.now();
+  const entry = ipRateMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    ipRateMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return { allowed: true, retryAfterSec: 0 };
+  }
+  entry.count++;
+  if (entry.count > RATE_LIMIT) {
+    return { allowed: false, retryAfterSec: Math.ceil((entry.resetAt - now) / 1000) };
+  }
+  return { allowed: true, retryAfterSec: 0 };
+}
+// 古いエントリを5分ごとにクリーンアップ
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of ipRateMap.entries()) {
+    if (now > entry.resetAt) ipRateMap.delete(ip);
+  }
+}, 5 * 60 * 1000);
+
+// ===== 3. GPT-4o 同時実行セマフォ（最大8件） =====
+const MAX_CONCURRENT_AI = 8;
+let activeAiCalls = 0;
+const aiQueue: Array<() => void> = [];
+
+async function withAiSemaphore<T>(fn: () => Promise<T>): Promise<T> {
+  if (activeAiCalls >= MAX_CONCURRENT_AI) {
+    await new Promise<void>(resolve => aiQueue.push(resolve));
+  }
+  activeAiCalls++;
+  try {
+    return await fn();
+  } finally {
+    activeAiCalls--;
+    if (aiQueue.length > 0) {
+      const next = aiQueue.shift();
+      if (next) next();
+    }
+  }
+}
 
 // ===== TikTokプロフィール スクレイピング =====
 interface TikTokProfile {
@@ -241,12 +314,12 @@ titleは「完全にバズる人間」「爆発まで秒読み」のような、
   lang === "zh" ? "\n\n重要：title, desc, goods, bads, nexts 所有字段请用简体中文。" : ""
 }`;
 
-  const aiRes = await openai.chat.completions.create({
+  const aiRes = await withAiSemaphore(() => openai.chat.completions.create({
     model: "gpt-4o",
     max_tokens: 900,
     temperature: 0.6,
     messages: [{ role: "user", content: prompt }],
-  });
+  }));
 
   const raw = aiRes.choices[0]?.message?.content || "";
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
@@ -367,8 +440,42 @@ router.post("/diagnose", upload.single("image"), async (req, res) => {
 
 // ===== ユーザー名で診断（スクレイピング） =====
 router.post("/diagnose-by-username", async (req, res) => {
+  const ip = getClientIp(req);
+  const rateCheck = checkRateLimit(ip);
+  if (!rateCheck.allowed) {
+    res.status(429).json({
+      error: `リクエストが多すぎます。${rateCheck.retryAfterSec}秒後に再試行してください。`,
+    });
+    return;
+  }
+
   const { username, device = "", language = "", screen = "", referer = "", network = "", lang = "ja" } = req.body as Record<string, string>;
   if (!username) { res.status(400).json({ error: "ユーザー名が必要です" }); return; }
+
+  // キャッシュを確認（同じユーザー名は10分間再利用）
+  const cacheKey = username.toLowerCase().replace(/^@/, "") + ":" + lang;
+  const cached = cacheGet(cacheKey);
+  if (cached) {
+    // キャッシュヒット: ユーザーIDだけ新しく発行してDBに記録
+    const cachedData = cached as Record<string, unknown>;
+    const userId = uuidv4();
+    const { pref, city } = await getGeo(req as Parameters<typeof getGeo>[0]);
+    await db.insert(usersTable).values({
+      id: userId,
+      tiktokUsername: cachedData.tiktok_username as string | null,
+      followers: (cachedData.followers as number) || 0,
+      rank: cachedData.rank as string,
+      score: (cachedData.total as number) || 0,
+      pref, city,
+      device: device.substring(0, 100), browser: "", language, network,
+      screenSize: screen, dwellTime: 0, scrollDepth: 0, operationCount: 0,
+      revisitCount: 1, lineRegistered: false, saved: false,
+      imageUrl: null, referer: referer.substring(0, 200),
+      genre: "その他",
+    });
+    res.json({ ...cachedData, user_id: userId, _cached: true });
+    return;
+  }
 
   let profile: TikTokProfile;
   try {
@@ -411,12 +518,11 @@ router.post("/diagnose-by-username", async (req, res) => {
   });
 
   const tiktokUsername = profile.tiktok_username || "@" + username.replace(/^@/, "");
-  res.json({
+  const responseData = {
     rank: ai.rank,
     title: ai.title,
     desc: ai.desc,
     total: ai.total,
-    user_id: userId,
     tiktok_username: tiktokUsername,
     scores: [
       { key: "buzzPotential",    val: ai.buzzPotential },
@@ -434,7 +540,12 @@ router.post("/diagnose-by-username", async (req, res) => {
     likes: profile.likes,
     videoCount: profile.videoCount,
     bio: profile.bio,
-  });
+  };
+
+  // キャッシュに保存
+  cacheSet(cacheKey, responseData);
+
+  res.json({ ...responseData, user_id: userId });
 });
 
 router.post("/save-result", async (req, res) => {
