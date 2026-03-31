@@ -663,7 +663,10 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(-33.333%); }
   }
-  .slider-row:hover { animation-play-state: paused; }
+  /* hover対応デバイスのみ停止（モバイルタッチで止まるバグ防止） */
+  @media (hover: hover) {
+    .slider-row:hover { animation-play-state: paused; }
+  }
 
   /* ピル型チップ */
   .user-chip {
@@ -1037,9 +1040,14 @@
     stepText.textContent = loadingSteps[0];
 
     const iv = setInterval(() => {
-      progress = Math.min(progress + 1, 88);
+      if (progress < 88) {
+        progress += 1;
+      } else if (progress < 95) {
+        // 88%以降はゆっくり進む（API待機中でも動いているように見せる）
+        progress += 0.04;
+      }
       bar.style.width = progress + '%';
-      if (progress % 22 === 0 && stepIdx < loadingSteps.length - 1) {
+      if (Math.floor(progress) % 22 === 0 && stepIdx < loadingSteps.length - 1) {
         stepIdx++;
         stepText.style.opacity = '0';
         setTimeout(() => { stepText.textContent = loadingSteps[stepIdx]; stepText.style.opacity = '1'; }, 200);
