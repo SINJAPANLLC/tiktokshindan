@@ -479,12 +479,102 @@
   .d3 { animation-delay: 0.25s; }
   .d4 { animation-delay: 0.35s; }
   .d5 { animation-delay: 0.45s; }
+
+  /* ===== USER SLIDER ===== */
+  .user-slider-section {
+    width: 100%;
+    overflow: hidden;
+    padding: 0 0 28px;
+    mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  }
+  .slider-row {
+    display: flex;
+    gap: 18px;
+    animation: slide-left 28s linear infinite;
+    width: max-content;
+  }
+  .slider-row:nth-child(2) {
+    animation-direction: reverse;
+    animation-duration: 34s;
+    margin-top: 14px;
+  }
+  @keyframes slide-left {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .slider-row:hover { animation-play-state: paused; }
+  .user-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .user-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top;
+    border: 2px solid var(--gray5);
+    background: #e8e8e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 50%;
+  }
+  .user-name {
+    font-size: 10px;
+    color: var(--gray4);
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .rank-dot {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--black);
+    color: var(--white);
+    font-size: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--white);
+  }
+  .rank-dot.god { background: #222; color: #fff; }
+  .rank-dot.s { background: #b8860b; color: #ffd700; }
+  .rank-dot.a { background: #555; color: #e8e8e8; }
+  .rank-dot.b { background: #7a5c2e; color: #c8a97e; }
+  .rank-dot.c { background: #777; color: #ddd; }
+  .user-chip-inner { position: relative; display: inline-block; }
 </style>
 </head>
 <body>
 
 <!-- SCREEN 1 -->
 <div id="screen-upload">
+
+  <!-- ユーザースライダー -->
+  <div class="user-slider-section" id="userSliderSection">
+    <div class="slider-row" id="sliderRow1"></div>
+    <div class="slider-row" id="sliderRow2"></div>
+  </div>
+
   <div class="container">
     <div class="logo">無料診断</div>
     <h1 class="page-title">TIKTOK<br>ACCOUNT</h1>
@@ -921,6 +1011,69 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2200);
   }
+
+  // ===== USER SLIDER =====
+  const demoUsers = [
+    { tiktok_username: '@yuki_dance', rank: 'S',   emoji: '🦊' },
+    { tiktok_username: '@tokyo_fit',  rank: 'A',   emoji: '🐼' },
+    { tiktok_username: '@haruto99',   rank: 'GOD', emoji: '👻' },
+    { tiktok_username: '@osaka_life', rank: 'B',   emoji: '🐯' },
+    { tiktok_username: '@mika_vlogs', rank: 'A',   emoji: '🦁' },
+    { tiktok_username: '@kenta_2024', rank: 'S',   emoji: '🤖' },
+    { tiktok_username: '@rina_cook',  rank: 'B',   emoji: '🐸' },
+    { tiktok_username: '@shibuya_vl', rank: 'C',   emoji: '🐶' },
+    { tiktok_username: '@nano_music', rank: 'A',   emoji: '🐱' },
+    { tiktok_username: '@ryu_gym',    rank: 'S',   emoji: '🦋' },
+    { tiktok_username: '@sora_art',   rank: 'GOD', emoji: '🌟' },
+    { tiktok_username: '@mai_beauty', rank: 'B',   emoji: '🐰' },
+  ];
+
+  function buildChip(user) {
+    const rank = (user.rank || 'C').toLowerCase();
+    const name = user.tiktok_username
+      ? (user.tiktok_username.startsWith('@') ? user.tiktok_username : '@' + user.tiktok_username)
+      : '@user';
+    const avatarHtml = user.image_url
+      ? `<img src="${user.image_url}" alt="" onerror="this.style.display='none';this.parentNode.textContent='${user.emoji || '👤'}';">`
+      : `<span>${user.emoji || '👤'}</span>`;
+    return `
+      <div class="user-chip">
+        <div class="user-chip-inner">
+          <div class="user-avatar">${avatarHtml}</div>
+          <div class="rank-dot ${rank}">${user.rank || 'C'}</div>
+        </div>
+        <div class="user-name">${name}</div>
+      </div>`;
+  }
+
+  function fillSlider(users) {
+    const all = users.length >= 8 ? users : [...users, ...demoUsers].slice(0, Math.max(users.length + demoUsers.length, 12));
+    const half = Math.ceil(all.length / 2);
+    const row1Users = all.slice(0, half);
+    const row2Users = all.slice(half);
+
+    function makeRow(rowUsers) {
+      const doubled = [...rowUsers, ...rowUsers];
+      return doubled.map(buildChip).join('');
+    }
+
+    document.getElementById('sliderRow1').innerHTML = makeRow(row1Users);
+    document.getElementById('sliderRow2').innerHTML = makeRow(row2Users.length ? row2Users : row1Users.slice().reverse());
+  }
+
+  (async function initSlider() {
+    try {
+      const res = await fetch('/api/recent-users');
+      const apiUsers = await res.json();
+      if (Array.isArray(apiUsers) && apiUsers.length >= 4) {
+        fillSlider(apiUsers);
+      } else {
+        fillSlider([...apiUsers, ...demoUsers]);
+      }
+    } catch {
+      fillSlider(demoUsers);
+    }
+  })();
 </script>
 </body>
 </html>

@@ -73,6 +73,22 @@ router.get("/admin/stats", async (req, res) => {
   }
 });
 
+router.get("/recent-users", async (req, res) => {
+  try {
+    const result = await db.execute(sql`
+      SELECT tiktok_username, image_url, rank
+      FROM tiktok_users
+      WHERE rank IS NOT NULL
+      ORDER BY created_at DESC
+      LIMIT 30
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    req.log.error({ err }, "Failed to fetch recent users");
+    res.status(500).json({ error: "ユーザーの取得に失敗しました" });
+  }
+});
+
 router.get("/admin/users", async (req, res) => {
   try {
     const users = await db
