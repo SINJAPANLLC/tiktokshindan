@@ -62,15 +62,6 @@
     margin-bottom: 44px;
     font-weight: 300;
   }
-  .upload-zone {
-    border: 1.5px dashed var(--gray5);
-    border-radius: 6px;
-    padding: 44px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-  }
-
   /* ===== RESPONSIVE ===== */
   @media (min-width: 700px) {
     .container { max-width: 680px; padding: 0 40px; }
@@ -112,43 +103,6 @@
     }
     .result-col-left { }
     .result-col-right { }
-  }
-  .upload-zone:hover, .upload-zone.dragover {
-    border-color: var(--black);
-    border-style: solid;
-    background: rgba(0,0,0,0.02);
-  }
-  .upload-label {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--black);
-    margin-bottom: 10px;
-    letter-spacing: 0.05em;
-  }
-  .upload-sub {
-    font-size: 12px;
-    color: var(--gray4);
-    line-height: 1.8;
-    font-weight: 300;
-  }
-  #fileInput { display: none; }
-  .preview-wrap { display: none; margin-top: 14px; position: relative; }
-  .preview-wrap img {
-    width: 100%;
-    border-radius: 6px;
-    display: block;
-    border: 1px solid var(--gray5);
-  }
-  .preview-tag {
-    position: absolute;
-    top: 10px; right: 10px;
-    background: var(--black);
-    color: var(--white);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 4px 10px;
-    border-radius: 2px;
   }
   .btn-main {
     display: block;
@@ -498,34 +452,6 @@
   }
   .btn-line:hover { background: #05b34c; }
 
-  /* ===== モード切替 ===== */
-  .mode-tabs {
-    display: flex;
-    gap: 0;
-    margin-bottom: 18px;
-    border: 1.5px solid var(--black);
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .mode-tab {
-    flex: 1;
-    padding: 11px 8px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    font-family: 'Noto Sans JP', sans-serif;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: var(--gray4);
-    transition: background 0.15s, color 0.15s;
-  }
-  .mode-tab.active {
-    background: var(--black);
-    color: var(--white);
-  }
-  .mode-tab:not(.active):hover { background: #f0f0f0; color: var(--black); }
-
   /* ユーザー名入力 */
   .username-input-wrap {
     margin-bottom: 0;
@@ -705,38 +631,16 @@
         <div class="logo">無料診断</div>
         <h1 class="page-title">TIKTOK<br>ACCOUNT</h1>
         <div class="divider"></div>
-        <p class="page-desc">プロフィール画面のスクリーンショットを<br>アップロードするだけ。AIが30秒で<br>あなたのTikTokを完全解析します。</p>
+        <p class="page-desc">TikTokのユーザー名を入力するだけ。<br>AIが30秒であなたのアカウントを<br>完全解析します。</p>
       </div>
       <div class="upload-col-right">
 
-        <!-- モード切替タブ -->
-        <div class="mode-tabs">
-          <button class="mode-tab active" id="tabImage" onclick="switchMode('image')">スクショで診断</button>
-          <button class="mode-tab" id="tabUsername" onclick="switchMode('username')">@ユーザー名で診断</button>
-        </div>
-
-        <!-- 画像モード -->
-        <div id="modeImage">
-          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-            <div class="upload-label">スクショをアップロード</div>
-            <div class="upload-sub">TikTokのプロフィール画面<br>（フォロワー数・いいね数が見えるもの）</div>
-            <input type="file" id="fileInput" accept="image/*">
+        <div class="username-input-wrap">
+          <div class="username-field">
+            <span class="username-at">@</span>
+            <input type="text" id="usernameInput" placeholder="tiktok_username" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" oninput="onUsernameInput()" onkeydown="if(event.key==='Enter'&&!btnDiagnose.disabled)startDiagnosis()">
           </div>
-          <div class="preview-wrap" id="previewWrap">
-            <img id="previewImg" src="" alt="">
-            <div class="preview-tag">選択済み</div>
-          </div>
-        </div>
-
-        <!-- ユーザー名モード -->
-        <div id="modeUsername" style="display:none;">
-          <div class="username-input-wrap">
-            <div class="username-field">
-              <span class="username-at">@</span>
-              <input type="text" id="usernameInput" placeholder="tiktok_username" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" oninput="onUsernameInput()">
-            </div>
-            <p class="username-hint">TikTokのユーザー名を入力するだけで自動解析します</p>
-          </div>
+          <p class="username-hint">TikTokのユーザー名を入力するだけで自動解析します</p>
         </div>
 
         <button class="btn-main" id="btnDiagnose" disabled onclick="startDiagnosis()">
@@ -828,62 +732,16 @@
 <div class="toast" id="toast">コピーしました</div>
 
 <script>
-  const fileInput = document.getElementById('fileInput');
-  const uploadZone = document.getElementById('uploadZone');
-  const previewWrap = document.getElementById('previewWrap');
-  const previewImg = document.getElementById('previewImg');
   const btnDiagnose = document.getElementById('btnDiagnose');
   let captionText = '';
-  let uploadedImageSrc = '';
-  let currentMode = 'image'; // 'image' | 'username'
-
-  // ===== モード切替 =====
-  function switchMode(mode) {
-    currentMode = mode;
-    document.getElementById('tabImage').classList.toggle('active', mode === 'image');
-    document.getElementById('tabUsername').classList.toggle('active', mode === 'username');
-    document.getElementById('modeImage').style.display = mode === 'image' ? 'block' : 'none';
-    document.getElementById('modeUsername').style.display = mode === 'username' ? 'block' : 'none';
-    // ボタン状態リセット
-    if (mode === 'image') {
-      btnDiagnose.disabled = !fileInput.files[0];
-    } else {
-      const val = document.getElementById('usernameInput').value.trim();
-      btnDiagnose.disabled = val.length < 1;
-    }
-  }
 
   function onUsernameInput() {
     const val = document.getElementById('usernameInput').value.trim();
     btnDiagnose.disabled = val.length < 1;
   }
 
-  fileInput.addEventListener('change', e => {
-    if (!e.target.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      uploadedImageSrc = ev.target.result;
-      previewImg.src = uploadedImageSrc;
-      previewWrap.style.display = 'block';
-      btnDiagnose.disabled = false;
-    };
-    reader.readAsDataURL(e.target.files[0]);
-  });
-
-  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('dragover');
-    const f = e.dataTransfer.files[0];
-    if (f && f.type.startsWith('image/')) {
-      fileInput.files = e.dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change'));
-    }
-  });
-
   const loadingSteps = [
-    '画像を読み込み中',
+    'プロフィールを取得中',
     'フォロワーデータを解析中',
     'エンゲージメントを計測中',
     'バズポテンシャルを診断中',
@@ -920,30 +778,16 @@
       network: (navigator.connection ? navigator.connection.effectiveType : ''),
     };
 
-    let fetchPromise;
-
-    if (currentMode === 'username') {
-      // ユーザー名モード：JSONで送信
-      const username = document.getElementById('usernameInput').value.trim().replace(/^@/, '');
-      fetchPromise = fetch('/api/diagnose-by-username', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, ...commonParams }),
-      }).then(r => {
+    const username = document.getElementById('usernameInput').value.trim().replace(/^@/, '');
+    fetch('/api/diagnose-by-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, ...commonParams }),
+    })
+      .then(r => {
         if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'エラー'); });
         return r.json();
-      });
-    } else {
-      // 画像モード：FormDataで送信
-      const formData = new FormData();
-      formData.append('image', fileInput.files[0]);
-      Object.entries(commonParams).forEach(([k, v]) => formData.append(k, v));
-      formData.append('dwell_time', Math.floor((Date.now() - dwellStart) / 1000));
-      formData.append('operation_count', operationCount);
-      fetchPromise = fetch('/api/diagnose', { method: 'POST', body: formData }).then(r => r.json());
-    }
-
-    fetchPromise
+      })
       .then(data => {
         clearInterval(iv);
         bar.style.width = '100%';
@@ -953,20 +797,12 @@
       .catch(err => {
         clearInterval(iv);
         bar.style.width = '100%';
-        if (currentMode === 'username' && err.message) {
-          showToast(err.message);
-          document.getElementById('screen-loading').style.display = 'none';
-          document.getElementById('screen-upload').style.display = 'flex';
-          return;
-        }
-        // 画像モードのフォールバック
-        const r = results[Math.floor(Math.random() * results.length)];
-        setTimeout(() => showResult(r), 400);
+        showToast(err.message || 'ユーザーが見つかりませんでした');
+        document.getElementById('screen-loading').style.display = 'none';
+        document.getElementById('screen-upload').style.display = 'flex';
       });
   }
 
-  let operationCount = 0;
-  document.addEventListener('click', () => operationCount++);
 
   const results = [
     {
