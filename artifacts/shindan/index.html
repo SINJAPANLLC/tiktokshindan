@@ -576,6 +576,15 @@
     overflow: hidden;
     flex-shrink: 0;
     color: #fff;
+    position: relative;
+  }
+  .user-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
   }
   .user-avatar.av-god { background: #111; }
   .user-avatar.av-s   { background: #b8860b; }
@@ -1089,11 +1098,19 @@
     const rankLabel = user.rank || 'C';
     const rawName = user.tiktok_username || 'user';
     const displayName = rawName.startsWith('@') ? rawName : '@' + rawName;
-    // ユーザー名の@を除いた先頭1文字をイニシャルとして使用
-    const initial = rawName.replace(/^@/, '').charAt(0).toUpperCase() || '?';
+    const cleanName = rawName.replace(/^@/, '');
+    // イニシャルはフォールバック用
+    const initial = cleanName.charAt(0).toUpperCase() || '?';
+    // unavatar.io でTikTokアバターをAPIなしで取得（失敗時はイニシャル表示）
+    const avatarUrl = `https://unavatar.io/tiktok/${encodeURIComponent(cleanName)}`;
     return `
       <div class="user-chip">
-        <div class="user-avatar av-${rank}">${initial}</div>
+        <div class="user-avatar av-${rank}">
+          <span class="av-initial">${initial}</span>
+          <img src="${avatarUrl}" alt="" loading="lazy"
+            onload="this.previousElementSibling.style.display='none'"
+            onerror="this.style.display='none'">
+        </div>
         <span class="user-name">${displayName}</span>
         <span class="rank-pill ${rank}">${rankLabel}</span>
       </div>`;
