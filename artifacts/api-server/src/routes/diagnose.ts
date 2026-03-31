@@ -115,10 +115,10 @@ function calcScores(followers: number, likes: number, hasBio: boolean, isBusines
   const monetizationScore = isBusiness ? 50 : 35;
   const total = Math.max(0, Math.floor((buzzPotential + engagementScore + profileScore + consistencyScore + monetizationScore) / 5));
   let rank: string;
-  if (total >= 82) rank = "GOD";
-  else if (total >= 68) rank = "S";
-  else if (total >= 56) rank = "A";
-  else if (total >= 42) rank = "B";
+  if (total >= 84) rank = "GOD";
+  else if (total >= 71) rank = "S";
+  else if (total >= 58) rank = "A";
+  else if (total >= 44) rank = "B";
   else rank = "C";
   return { buzzPotential, engagementScore, profileScore, consistencyScore, monetizationScore, total, rank };
 }
@@ -186,7 +186,7 @@ titleは「完全にバズる人間」「爆発まで秒読み」のような、
 - B: 42〜55（伸び代あり・改善で飛躍できる）
 - C: 41以下（初期段階・基礎から強化）
 
-ランク分布目安: GOD 5%、S 15%、A 35%、B 30%、C 15%
+ランク分布目安: GOD 3%、S 12%、A 35%、B 35%、C 15%
 （多くのユーザーがA〜Bランクに入るよう、バランス良く評価すること）`;
 
   const aiRes = await openai.chat.completions.create({
@@ -205,10 +205,10 @@ titleは「完全にバズる人間」「爆発まで秒読み」のような、
   const total = clamp(p.total);
   // totalから正確にランクを再計算（AIの申告ランクとズレを防ぐ）
   let rank: string;
-  if (total >= 82) rank = "GOD";
-  else if (total >= 68) rank = "S";
-  else if (total >= 56) rank = "A";
-  else if (total >= 42) rank = "B";
+  if (total >= 84) rank = "GOD";
+  else if (total >= 71) rank = "S";
+  else if (total >= 58) rank = "A";
+  else if (total >= 44) rank = "B";
   else rank = "C";
   return {
     rank,
