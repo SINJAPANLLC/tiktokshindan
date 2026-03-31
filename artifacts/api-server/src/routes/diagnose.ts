@@ -594,4 +594,24 @@ router.post("/line-register", async (req, res) => {
   res.json({ ok: true });
 });
 
+router.get("/avatar-proxy", async (req, res) => {
+  const username = String(req.query.u || "").replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 60);
+  if (!username) { res.status(400).end(); return; }
+  try {
+    const upstream = await fetch(`https://unavatar.io/tiktok/${encodeURIComponent(username)}`, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!upstream.ok) { res.status(404).end(); return; }
+    const ct = upstream.headers.get("content-type") || "image/jpeg";
+    const buf = await upstream.arrayBuffer();
+    res.set("Content-Type", ct);
+    res.set("Cache-Control", "public, max-age=86400");
+    res.set("Access-Control-Allow-Origin", "*");
+    res.send(Buffer.from(buf));
+  } catch {
+    res.status(502).end();
+  }
+});
+
 export default router;

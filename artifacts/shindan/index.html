@@ -651,23 +651,11 @@
   .slider-row {
     display: flex;
     gap: 10px;
-    animation: slide-left 52s linear infinite;
     width: max-content;
     will-change: transform;
-    backface-visibility: hidden;
   }
   .slider-row:nth-child(2) {
-    animation-direction: reverse;
-    animation-duration: 66s;
     margin-top: 10px;
-  }
-  @keyframes slide-left {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-33.333%); }
-  }
-  /* hover対応デバイスのみ停止（モバイルタッチで止まるバグ防止） */
-  @media (hover: hover) {
-    .slider-row:hover { animation-play-state: paused; }
   }
 
   /* ピル型チップ */
@@ -1241,7 +1229,7 @@
     const rawUsername = (r.tiktok_username || '').replace(/^@/, '');
 
     if (rawUsername) {
-      avatarImg.src = `https://unavatar.io/tiktok/${rawUsername}`;
+      avatarImg.src = `/api/avatar-proxy?u=${encodeURIComponent(rawUsername)}`;
       avatarImg.style.display = 'block';
       avatarEmoji.style.display = 'none';
       avatarImg.onerror = () => {
@@ -1345,20 +1333,14 @@
       card.style.animation = 'none';
       card.classList.add('snapshot-light');
 
-      // 外部画像(unavatar等)をCORSエラー回避のため一時非表示
-      const cardImgs = card.querySelectorAll('img');
-      cardImgs.forEach(img => { img.dataset.origDisplay = img.style.display; img.style.display = 'none'; });
-
       setTimeout(() => {
         html2canvas(card, {
           scale: 2,
           backgroundColor: '#ffffff',
-          useCORS: false,
+          useCORS: true,
           allowTaint: false,
           logging: false,
         }).then(canvas => {
-          // 外部画像を元に戻す
-          cardImgs.forEach(img => { img.style.display = img.dataset.origDisplay || ''; });
           card.classList.remove('snapshot-light');
           card.style.opacity = '';
           card.style.animation = '';
@@ -1387,7 +1369,6 @@
             downloadOrOpenTab(dataUrl);
           }
         }).catch(() => {
-          cardImgs.forEach(img => { img.style.display = img.dataset.origDisplay || ''; });
           card.classList.remove('snapshot-light');
           card.style.opacity = '';
           card.style.animation = '';
@@ -1461,8 +1442,7 @@
     const cleanName = rawName.replace(/^@/, '');
     // イニシャルはフォールバック用
     const initial = cleanName.charAt(0).toUpperCase() || '?';
-    // unavatar.io でTikTokアバターをAPIなしで取得（失敗時はイニシャル表示）
-    const avatarUrl = `https://unavatar.io/tiktok/${encodeURIComponent(cleanName)}`;
+    const avatarUrl = `/api/avatar-proxy?u=${encodeURIComponent(cleanName)}`;
     return `
       <div class="user-chip">
         <div class="user-avatar av-${rank}">
@@ -1489,6 +1469,29 @@
 
     document.getElementById('sliderRow1').innerHTML = makeRow(row1Users);
     document.getElementById('sliderRow2').innerHTML = makeRow(row2Users);
+    startSliderAnimation();
+  }
+
+  function startSliderAnimation() {
+    const rows = [
+      { el: document.getElementById('sliderRow1'), speed: 0.35, pos: 0 },
+      { el: document.getElementById('sliderRow2'), speed: -0.28, pos: 0 },
+    ];
+    let raf;
+    function step() {
+      rows.forEach(r => {
+        if (!r.el) return;
+        const totalW = r.el.scrollWidth;
+        const oneThird = totalW / 3;
+        r.pos -= r.speed;
+        if (r.speed > 0 && Math.abs(r.pos) >= oneThird) r.pos = 0;
+        if (r.speed < 0 && r.pos >= 0) r.pos = -oneThird;
+        r.el.style.transform = `translateX(${r.pos}px)`;
+      });
+      raf = requestAnimationFrame(step);
+    }
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(step);
   }
 
   (async function initSlider() {
