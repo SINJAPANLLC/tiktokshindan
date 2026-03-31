@@ -1,5 +1,5 @@
 kind = "api"
-previewPath = "/api"
+previewPath = "/"
 title = "TikTok診断ツール"
 version = "1.0.0"
 id = "3B4_FFSkEVBkAeYMFRJ2e"
