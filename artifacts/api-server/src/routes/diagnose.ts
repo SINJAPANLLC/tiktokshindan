@@ -115,10 +115,10 @@ function calcScores(followers: number, likes: number, hasBio: boolean, isBusines
   const monetizationScore = isBusiness ? 50 : 35;
   const total = Math.max(0, Math.floor((buzzPotential + engagementScore + profileScore + consistencyScore + monetizationScore) / 5));
   let rank: string;
-  if (total >= 90) rank = "GOD";
-  else if (total >= 78) rank = "S";
-  else if (total >= 65) rank = "A";
-  else if (total >= 50) rank = "B";
+  if (total >= 85) rank = "GOD";
+  else if (total >= 70) rank = "S";
+  else if (total >= 55) rank = "A";
+  else if (total >= 40) rank = "B";
   else rank = "C";
   return { buzzPotential, engagementScore, profileScore, consistencyScore, monetizationScore, total, rank };
 }
@@ -134,8 +134,10 @@ interface AiAnalysis {
 
 async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const engagement = profile.followers > 0
-    ? ((profile.likes / profile.followers) * 100).toFixed(2)
+  // 動画1本あたりの平均いいね率（より実態に近いエンゲージメント指標）
+  const avgLikesPerVideo = profile.videoCount > 0 ? Math.floor(profile.likes / profile.videoCount) : 0;
+  const perVideoEngagement = profile.followers > 0
+    ? ((avgLikesPerVideo / profile.followers) * 100).toFixed(2)
     : "0";
 
   const prompt = `あなたはTikTokマーケティングの専門家です。以下のアカウントデータを分析し、診断結果をJSONのみで返してください（Markdownコードブロック不要）。
@@ -144,35 +146,43 @@ async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
 フォロワー数: ${profile.followers.toLocaleString()}人
 総いいね数: ${profile.likes.toLocaleString()}
 動画本数: ${profile.videoCount}本
-エンゲージメント率(総いいね÷フォロワー): ${engagement}%
+動画1本あたりの平均いいね: ${avgLikesPerVideo.toLocaleString()}
+平均エンゲージメント率(平均いいね÷フォロワー): ${perVideoEngagement}%
 プロフィール文: "${profile.bio || "（未設定）"}"
 公認バッジ: ${profile.verified ? "あり" : "なし"}
 ビジネスアカウント: ${profile.is_business ? "はい" : "いいえ"}
 
+【重要】スコアリングガイドライン:
+- フォロワー数が多いほどbuzzPotentialを高く評価すること（1万→50点、10万→65点、100万→80点、1000万以上→95点）
+- エンゲージメント率1%以上は高評価（TikTok平均は0.5〜2%）
+- bioの有無やビジネスアカウントかどうかは加点要素にはなるが、大きく減点しないこと
+- 公認バッジありはbuzzPotential+10点
+- 全体的にユーザーのモチベーションが上がるよう、ポジティブな評価を心がけること
+
 返却JSON形式:
 {
-  "rank": "C",
+  "rank": "B",
   "title": "診断タイトル（15文字以内のキャッチコピー）",
   "desc": "このアカウントの診断説明（60文字以内、具体的に）",
-  "buzzPotential": 45,
-  "engagementScore": 60,
-  "profileScore": 50,
-  "consistencyScore": 55,
-  "monetizationScore": 40,
-  "total": 50,
+  "buzzPotential": 65,
+  "engagementScore": 70,
+  "profileScore": 60,
+  "consistencyScore": 65,
+  "monetizationScore": 55,
+  "total": 63,
   "goods": ["強み1（具体的に）", "強み2（具体的に）"],
   "bads": ["改善点1（具体的に）", "改善点2（具体的に）"],
   "nexts": ["今すぐできる具体的アクション1", "今すぐできる具体的アクション2"]
 }
 
-ランク基準:
-- GOD: total 90以上（トップクリエイター・完成されたアカウント）
-- S: 78〜89（強い影響力・高エンゲージメント）
-- A: 65〜77（成長中・伸び代大）
-- B: 50〜64（改善で伸びる余地あり）
-- C: 49以下（初期段階・基礎強化が必要）
+ランク基準（totalスコアで判定）:
+- GOD: 85以上（トップクリエイター・完成されたアカウント）
+- S: 70〜84（強い影響力・インフルエンサー級）
+- A: 55〜69（成長中・大きな可能性あり）
+- B: 40〜54（伸び代あり・改善で飛躍できる）
+- C: 39以下（初期段階・基礎から強化）
 
-各スコア(0-100)はデータに基づいてリアルかつ辛口に評価すること。`;
+ランク分布目安: GOD 5%、S 15%、A 30%、B 35%、C 15%（大多数はA〜Bに入るよう評価すること）`;
 
   const aiRes = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -187,16 +197,24 @@ async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
   const p = JSON.parse(jsonMatch[0]);
 
   const clamp = (v: unknown) => Math.min(100, Math.max(0, Number(v) || 0));
+  const total = clamp(p.total);
+  // totalから正確にランクを再計算（AIの申告ランクとズレを防ぐ）
+  let rank: string;
+  if (total >= 85) rank = "GOD";
+  else if (total >= 70) rank = "S";
+  else if (total >= 55) rank = "A";
+  else if (total >= 40) rank = "B";
+  else rank = "C";
   return {
-    rank: String(p.rank || "C"),
-    title: String(p.title || rankTitles[String(p.rank || "C")] || ""),
-    desc: String(p.desc || rankDescs[String(p.rank || "C")] || ""),
+    rank,
+    title: String(p.title || rankTitles[rank] || ""),
+    desc: String(p.desc || rankDescs[rank] || ""),
     buzzPotential: clamp(p.buzzPotential),
     engagementScore: clamp(p.engagementScore),
     profileScore: clamp(p.profileScore),
     consistencyScore: clamp(p.consistencyScore),
     monetizationScore: clamp(p.monetizationScore),
-    total: clamp(p.total),
+    total,
     goods: Array.isArray(p.goods) ? p.goods.map(String) : [],
     bads: Array.isArray(p.bads) ? p.bads.map(String) : [],
     nexts: Array.isArray(p.nexts) ? p.nexts.map(String) : [],
