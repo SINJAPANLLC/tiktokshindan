@@ -527,45 +527,49 @@
   .user-slider-section {
     width: 100%;
     overflow: hidden;
-    padding: 0 0 28px;
-    mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    padding: 20px 0 32px;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
   }
   .slider-row {
     display: flex;
-    gap: 18px;
-    animation: slide-left 28s linear infinite;
+    gap: 10px;
+    animation: slide-left 32s linear infinite;
     width: max-content;
   }
   .slider-row:nth-child(2) {
     animation-direction: reverse;
-    animation-duration: 34s;
-    margin-top: 14px;
+    animation-duration: 40s;
+    margin-top: 10px;
   }
   @keyframes slide-left {
     0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    100% { transform: translateX(-33.333%); }
   }
   .slider-row:hover { animation-play-state: paused; }
+
+  /* ピル型チップ */
   .user-chip {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 100px;
+    padding: 6px 12px 6px 6px;
+    transition: border-color 0.2s;
   }
+  .user-chip:hover { border-color: #bbb; }
   .user-avatar {
-    width: 52px;
-    height: 52px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    object-fit: cover;
-    object-position: top;
-    border: 2px solid var(--gray5);
     background: #e8e8e8;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 14px;
     overflow: hidden;
     flex-shrink: 0;
   }
@@ -573,38 +577,32 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: top;
     border-radius: 50%;
   }
   .user-name {
-    font-size: 10px;
-    color: var(--gray4);
-    font-weight: 300;
-    letter-spacing: 0.03em;
-    max-width: 60px;
+    font-size: 11px;
+    color: #444;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    max-width: 80px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-align: center;
   }
-  .rank-dot {
-    position: absolute;
-    bottom: 0; right: 0;
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    background: var(--black);
-    color: var(--white);
-    font-size: 8px;
+  .rank-pill {
     font-family: 'Bebas Neue', sans-serif;
-    display: flex; align-items: center; justify-content: center;
-    border: 1.5px solid var(--white);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    line-height: 1.4;
   }
-  .rank-dot.god { background: #222; color: #fff; }
-  .rank-dot.s { background: #b8860b; color: #ffd700; }
-  .rank-dot.a { background: #555; color: #e8e8e8; }
-  .rank-dot.b { background: #7a5c2e; color: #c8a97e; }
-  .rank-dot.c { background: #777; color: #ddd; }
-  .user-chip-inner { position: relative; display: inline-block; }
+  .rank-pill.god { background: #111; color: #fff; }
+  .rank-pill.s   { background: #b8860b; color: #ffd700; }
+  .rank-pill.a   { background: #444; color: #e8e8e8; }
+  .rank-pill.b   { background: #7a5c2e; color: #d4aa70; }
+  .rank-pill.c   { background: #888; color: #ddd; }
 </style>
 </head>
 <body>
@@ -1085,35 +1083,35 @@
 
   function buildChip(user) {
     const rank = (user.rank || 'C').toLowerCase();
+    const rankLabel = user.rank || 'C';
     const name = user.tiktok_username
       ? (user.tiktok_username.startsWith('@') ? user.tiktok_username : '@' + user.tiktok_username)
       : '@user';
     const avatarHtml = user.image_url
-      ? `<img src="${user.image_url}" alt="" onerror="this.style.display='none';this.parentNode.textContent='${user.emoji || '👤'}';">`
-      : `<span>${user.emoji || '👤'}</span>`;
+      ? `<img src="${user.image_url}" alt="" onerror="this.style.display='none';this.nextSibling.style.display='flex';">` 
+      : '';
+    const fallback = `<span style="${user.image_url ? 'display:none' : ''}">${user.emoji || '👤'}</span>`;
     return `
       <div class="user-chip">
-        <div class="user-chip-inner">
-          <div class="user-avatar">${avatarHtml}</div>
-          <div class="rank-dot ${rank}">${user.rank || 'C'}</div>
-        </div>
-        <div class="user-name">${name}</div>
+        <div class="user-avatar">${avatarHtml}${fallback}</div>
+        <span class="user-name">${name}</span>
+        <span class="rank-pill ${rank}">${rankLabel}</span>
       </div>`;
   }
 
   function fillSlider(users) {
-    const all = users.length >= 8 ? users : [...users, ...demoUsers].slice(0, Math.max(users.length + demoUsers.length, 12));
-    const half = Math.ceil(all.length / 2);
-    const row1Users = all.slice(0, half);
-    const row2Users = all.slice(half);
+    const base = users.length >= 8 ? users : [...users, ...demoUsers].slice(0, Math.max(users.length + demoUsers.length, 12));
+    // 両行に同じ数のアイテムを持たせる（行2は逆順でシャッフル感を出す）
+    const row1Users = base;
+    const row2Users = [...base].reverse();
 
     function makeRow(rowUsers) {
-      const doubled = [...rowUsers, ...rowUsers];
-      return doubled.map(buildChip).join('');
+      // ループのために3倍に複製（十分な幅を確保）
+      return [...rowUsers, ...rowUsers, ...rowUsers].map(buildChip).join('');
     }
 
     document.getElementById('sliderRow1').innerHTML = makeRow(row1Users);
-    document.getElementById('sliderRow2').innerHTML = makeRow(row2Users.length ? row2Users : row1Users.slice().reverse());
+    document.getElementById('sliderRow2').innerHTML = makeRow(row2Users);
   }
 
   (async function initSlider() {
