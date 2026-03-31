@@ -964,21 +964,26 @@
     document.getElementById('screen-loading').style.display = 'none';
     document.getElementById('screen-result').style.display = 'block';
 
-    // ユーザー情報（スクショから読み取れないためデモ表示）
+    // アバター表示：ユーザー名があれば unavatar.io で取得
     const avatarImg = document.getElementById('cardAvatarImg');
     const avatarEmoji = document.getElementById('cardAvatarEmoji');
+    const rawUsername = (r.tiktok_username || '').replace(/^@/, '');
 
-    // アップロードした画像をアバターに使用（プロフ画面の雰囲気を出す）
-    if (uploadedImageSrc) {
-      avatarImg.src = uploadedImageSrc;
+    if (rawUsername) {
+      avatarImg.src = `https://unavatar.io/tiktok/${rawUsername}`;
       avatarImg.style.display = 'block';
       avatarEmoji.style.display = 'none';
+      avatarImg.onerror = () => {
+        avatarImg.style.display = 'none';
+        avatarEmoji.textContent = avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)];
+        avatarEmoji.style.display = 'block';
+      };
     } else {
       avatarEmoji.textContent = avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)];
       avatarEmoji.style.display = 'block';
     }
 
-    document.getElementById('cardUsername').textContent = '@あなたのアカウント';
+    document.getElementById('cardUsername').textContent = r.tiktok_username || '@あなたのアカウント';
     document.getElementById('cardDate').textContent = getTodayString();
 
     // ランク
