@@ -244,6 +244,7 @@ interface AiAnalysis {
   profileScore: number; consistencyScore: number; monetizationScore: number;
   total: number;
   goods: string[]; bads: string[]; nexts: string[];
+  costUsd: number; // API使用コスト (USD)
 }
 
 async function analyzeWithAI(profile: TikTokProfile, lang = "ja"): Promise<AiAnalysis> {
@@ -321,6 +322,12 @@ titleは「完全にバズる人間」「爆発まで秒読み」のような、
     messages: [{ role: "user", content: prompt }],
   }));
 
+  // GPT-4o コスト計算 (USD): input $5/1M tokens, output $15/1M tokens
+  const usage = aiRes.usage;
+  const costUsd = usage
+    ? (usage.prompt_tokens * 5 + usage.completion_tokens * 15) / 1_000_000
+    : 0.004; // フォールバック推定値
+
   const raw = aiRes.choices[0]?.message?.content || "";
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("AI response parse failed");
@@ -348,6 +355,7 @@ titleは「完全にバズる人間」「爆発まで秒読み」のような、
     goods: Array.isArray(p.goods) ? p.goods.map(String) : [],
     bads: Array.isArray(p.bads) ? p.bads.map(String) : [],
     nexts: Array.isArray(p.nexts) ? p.nexts.map(String) : [],
+    costUsd,
   };
 }
 
@@ -515,6 +523,7 @@ router.post("/diagnose-by-username", async (req, res) => {
     revisitCount: 1, lineRegistered: false, saved: false,
     imageUrl: null, referer: referer.substring(0, 200),
     genre: profile.genre,
+    apiCostUsd: ai.costUsd.toFixed(6),
   });
 
   const tiktokUsername = profile.tiktok_username || "@" + username.replace(/^@/, "");

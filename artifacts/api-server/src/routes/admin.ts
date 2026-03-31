@@ -57,6 +57,17 @@ router.get("/admin/stats", async (req, res) => {
       WHERE city IS NOT NULL AND city != '不明' GROUP BY city ORDER BY cnt DESC LIMIT 8
     `);
 
+    const costResult = await db.execute(sql`
+      SELECT
+        COALESCE(SUM(api_cost_usd::numeric), 0)::float as total_cost_usd,
+        COALESCE(SUM(api_cost_usd::numeric) FILTER (WHERE created_at::date = CURRENT_DATE), 0)::float as today_cost_usd,
+        COALESCE(SUM(api_cost_usd::numeric) FILTER (WHERE created_at >= date_trunc('month', NOW())), 0)::float as month_cost_usd,
+        COALESCE(AVG(api_cost_usd::numeric) FILTER (WHERE api_cost_usd::numeric > 0), 0)::float as avg_cost_per_call,
+        COUNT(*) FILTER (WHERE api_cost_usd::numeric > 0)::int as paid_calls
+      FROM tiktok_users
+    `);
+    const cost = costResult.rows[0];
+
     res.json({
       overview,
       daily: dailyResult.rows,
@@ -66,6 +77,7 @@ router.get("/admin/stats", async (req, res) => {
       rank_cvr: rankCvrResult.rows,
       geo: geoResult.rows,
       city: cityResult.rows,
+      cost,
     });
   } catch (err) {
     req.log.error({ err }, "Failed to fetch admin stats");

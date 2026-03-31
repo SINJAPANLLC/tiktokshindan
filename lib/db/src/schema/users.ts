@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -25,6 +25,7 @@ export const usersTable = pgTable("tiktok_users", {
   imageUrl: text("image_url"),
   referer: text("referer"),
   genre: text("genre"),
+  apiCostUsd: numeric("api_cost_usd", { precision: 10, scale: 6 }).default("0"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ createdAt: true });
