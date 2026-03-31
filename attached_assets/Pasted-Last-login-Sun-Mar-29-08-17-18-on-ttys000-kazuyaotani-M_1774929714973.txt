@@ -1,0 +1,223 @@
+Last login: Sun Mar 29 08:17:18 on ttys000
+kazuyaotani@Mac ~ % ssh root@212.85.24.206
+root@212.85.24.206's password: 
+Welcome to Ubuntu 24.04.4 LTS (GNU/Linux 6.8.0-88-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Tue Mar 31 03:56:53 UTC 2026
+
+  System load:  0.03                Processes:             156
+  Usage of /:   15.7% of 192.69GB   Users logged in:       0
+  Memory usage: 27%                 IPv4 address for eth0: 212.85.24.206
+  Swap usage:   0%                  IPv6 address for eth0: 2a02:4780:59:cc86::1
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+18 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+13 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+1 updates could not be installed automatically. For more details,
+see /var/log/unattended-upgrades/unattended-upgrades.log
+
+*** System restart required ***
+Last login: Sat Mar 28 23:18:13 2026 from 59.132.57.148
+root@srv1087935:~# pm2 list
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 22 │ aiagent            │ fork     │ 20   │ online    │ 0%       │ 180.4mb  │
+│ 20 │ keimatch           │ fork     │ 4    │ online    │ 0%       │ 535.7mb  │
+│ 3  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 143.1mb  │
+│ 34 │ onlyu              │ fork     │ 84   │ online    │ 0%       │ 139.1mb  │
+│ 37 │ sinjapan-crm-api   │ fork     │ 0    │ online    │ 0%       │ 133.9mb  │
+│ 1  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 63.1mb   │
+│ 2  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 102.5mb  │
+│ 25 │ sinjapanai         │ fork     │ 0    │ online    │ 0%       │ 112.5mb  │
+│ 30 │ sinjapanailive-api │ fork     │ 0    │ online    │ 0%       │ 117.1mb  │
+│ 39 │ sinjapanaisite-api │ fork     │ 4    │ online    │ 0%       │ 191.1mb  │
+│ 38 │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 228.0mb  │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:~# ss -tlnp | grep LISTEN
+LISTEN 0      511          0.0.0.0:443        0.0.0.0:*    users:(("nginx",pid=1492035,fd=6),("nginx",pid=1492034,fd=6),("nginx",pid=1492033,fd=6),("nginx",pid=1492032,fd=6),("nginx",pid=1452481,fd=6))               
+LISTEN 0      511          0.0.0.0:80         0.0.0.0:*    users:(("nginx",pid=1492035,fd=5),("nginx",pid=1492034,fd=5),("nginx",pid=1492033,fd=5),("nginx",pid=1492032,fd=5),("nginx",pid=1452481,fd=5))               
+LISTEN 0      4096         0.0.0.0:22         0.0.0.0:*    users:(("sshd",pid=1282254,fd=3),("systemd",pid=1,fd=215))                                                                                                   
+LISTEN 0      4096      127.0.0.54:53         0.0.0.0:*    users:(("systemd-resolve",pid=1425115,fd=17))                                                                                                                
+LISTEN 0      200        127.0.0.1:5432       0.0.0.0:*    users:(("postgres",pid=1428839,fd=7))                                                                                                                        
+LISTEN 0      511          0.0.0.0:20000      0.0.0.0:*    users:(("node",pid=1069101,fd=18))                                                                                                                           
+LISTEN 0      511          0.0.0.0:3009       0.0.0.0:*    users:(("node /var/www/a",pid=1510964,fd=20))                                                                                                                
+LISTEN 0      511          0.0.0.0:3001       0.0.0.0:*    users:(("node",pid=1485722,fd=20))                                                                                                                           
+LISTEN 0      511          0.0.0.0:5050       0.0.0.0:*    users:(("node /var/www/t",pid=1484066,fd=19))                                                                                                                
+LISTEN 0      511          0.0.0.0:5002       0.0.0.0:*    users:(("node /var/www/s",pid=1068713,fd=19))                                                                                                                
+LISTEN 0      511          0.0.0.0:5003       0.0.0.0:*    users:(("node /var/www/s",pid=1068719,fd=19))                                                                                                                
+LISTEN 0      2048         0.0.0.0:5000       0.0.0.0:*    users:(("python",pid=1255326,fd=6))                                                                                                                          
+LISTEN 0      2048         0.0.0.0:5006       0.0.0.0:*    users:(("python",pid=1255322,fd=6))                                                                                                                          
+LISTEN 0      511          0.0.0.0:5004       0.0.0.0:*    users:(("node /var/www/m",pid=1068731,fd=19))                                                                                                                
+LISTEN 0      511          0.0.0.0:5005       0.0.0.0:*    users:(("node /var/www/o",pid=1453288,fd=22))                                                                                                                
+LISTEN 0      2048         0.0.0.0:8008       0.0.0.0:*    users:(("gunicorn",pid=1242005,fd=5),("gunicorn",pid=1242004,fd=5),("gunicorn",pid=1242001,fd=5),("gunicorn",pid=1242000,fd=5),("gunicorn",pid=1241978,fd=5))
+LISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*    users:(("systemd-resolve",pid=1425115,fd=15))                                                                                                                
+LISTEN 0      200            [::1]:5432          [::]:*    users:(("postgres",pid=1428839,fd=6))                                                                                                                        
+LISTEN 0      511             [::]:443           [::]:*    users:(("nginx",pid=1492035,fd=7),("nginx",pid=1492034,fd=7),("nginx",pid=1492033,fd=7),("nginx",pid=1492032,fd=7),("nginx",pid=1452481,fd=7))               
+LISTEN 0      511             [::]:80            [::]:*    users:(("nginx",pid=1492035,fd=8),("nginx",pid=1492034,fd=8),("nginx",pid=1492033,fd=8),("nginx",pid=1492032,fd=8),("nginx",pid=1452481,fd=8))               
+LISTEN 0      4096            [::]:22            [::]:*    users:(("sshd",pid=1282254,fd=4),("systemd",pid=1,fd=220))                                                                                                   
+LISTEN 0      511                *:4000             *:*    users:(("node /opt/sinja",pid=1493435,fd=19))                                                                                                                
+LISTEN 0      511                *:3010             *:*    users:(("node /opt/sinja",pid=1348383,fd=20))                                                                                                                
+LISTEN 0      511                *:4111             *:*    users:(("node /var/www/s",pid=1392684,fd=20))                                                                                                                
+LISTEN 0      511                *:8099             *:*    users:(("node",pid=1452695,fd=20))                                                                                                                           
+LISTEN 0      4096               *:7880             *:*    users:(("livekit-server",pid=1445508,fd=6))                                                                                                                  
+LISTEN 0      4096               *:7881             *:*    users:(("livekit-server",pid=1445508,fd=3))                                                                                                                  
+root@srv1087935:~# cd /var/www
+git clone https://github.com/SINJAPANLLC/tiktokshindan.git
+cd tiktokshindan
+Cloning into 'tiktokshindan'...
+remote: Enumerating objects: 425, done.
+remote: Counting objects: 100% (425/425), done.
+remote: Compressing objects: 100% (196/196), done.
+remote: Total 425 (delta 209), reused 425 (delta 209), pack-reused 0 (from 0)
+Receiving objects: 100% (425/425), 1.08 MiB | 6.49 MiB/s, done.
+Resolving deltas: 100% (209/209), done.
+root@srv1087935:/var/www/tiktokshindan# node --version
+npm install -g pnpm
+v20.20.0
+
+changed 1 package in 2s
+
+1 package is looking for funding
+  run `npm fund` for details
+root@srv1087935:/var/www/tiktokshindan# pnpm install
+Scope: all 11 workspace projects
+Lockfile is up to date, resolution step is skipped
+Packages: +514
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 514, reused 508, downloaded 5, added 514, done
+
+devDependencies:
++ prettier 3.8.1
++ typescript 5.9.3
+
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_use…
+└─ Done in 15ms
+Done in 5.7s using pnpm v10.33.0
+root@srv1087935:/var/www/tiktokshindan# cd lib/db && npx tsc --build && cd ../.. && \
+PORT=3100 BASE_PATH=/ pnpm --filter @workspace/shindan run build && \
+cp -r artifacts/shindan/dist/public/* artifacts/api-server/static/ && \
+NODE_ENV=production pnpm --filter @workspace/api-server run build
+
+> @workspace/shindan@0.0.0 build /var/www/tiktokshindan/artifacts/shindan
+> vite build --config vite.config.ts
+
+vite v7.3.1 building client environment for production...
+✓ 4 modules transformed.
+dist/public/admin.html  29.54 kB │ gzip:  7.76 kB
+dist/public/index.html  50.60 kB │ gzip: 14.24 kB
+✓ built in 169ms
+
+> @workspace/api-server@0.0.0 build /var/www/tiktokshindan/artifacts/api-server
+> node ./build.mjs
+
+
+  dist/index.mjs                       2.9mb ⚠️
+  dist/pino-worker.mjs               153.4kb
+  dist/pino-file.mjs                 142.1kb
+  dist/pino-pretty.mjs               114.6kb
+  dist/thread-stream-worker.mjs        7.3kb
+  dist/index.mjs.map                   6.1mb
+  dist/pino-worker.mjs.map           256.9kb
+  dist/pino-file.mjs.map             229.0kb
+  dist/pino-pretty.mjs.map           203.9kb
+  dist/thread-stream-worker.mjs.map   12.0kb
+
+⚡ Done in 378ms
+root@srv1087935:/var/www/tiktokshindan# cat > /var/www/tiktokshindan/ecosystem.config.cjs << 'EOF'
+module.exports = {
+  apps: [{
+    name: 'tiktokshindan',
+    script: './artifacts/api-server/dist/index.mjs',
+    cwd: '/var/www/tiktokshindan',
+    env: {
+      NODE_ENV: 'production',
+      PORT: '3100',
+      NEON_DATABASE_URL: 'postgresql://neondb_owner:npg_KofiudHVT2C6@ep-icy-fog-amodw4se-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+      OPENAI_API_KEY: 'sk-proj-UmxYdsOWtbQMqWJrIqvbR0zFp2BJpEl0LbeTbqBRBFmy_dFIhzeFuvyLUuhdG011YaIK67yZV8T3BlbkFJkmJwoLDivdX8QN0om-ASBwuQ8a11uXgH5g4Hdq4DqJn2ISgixhb5NZOlWbueqlNMA',
+      SESSION_SECRET: 'iCbgYw/X9R+ysG1sbpkFTVFHgNysLGG1e8OV8q6U9QEnsI20xuxIxyIpshN4NHERx5hvJ5pqszTIiR/yEo7QdA=='
+    }
+  }]
+}
+EOF
+root@srv1087935:/var/www/tiktokshindan# pm2 start /var/www/tiktokshindan/ecosystem.config.cjs
+pm2 save
+[PM2][WARN] Applications tiktokshindan not running, starting...
+[PM2] App [tiktokshindan] launched (1 instances)
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 22 │ aiagent            │ fork     │ 20   │ online    │ 0%       │ 180.3mb  │
+│ 20 │ keimatch           │ fork     │ 4    │ online    │ 0%       │ 553.0mb  │
+│ 3  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 143.4mb  │
+│ 34 │ onlyu              │ fork     │ 84   │ online    │ 0%       │ 139.8mb  │
+│ 37 │ sinjapan-crm-api   │ fork     │ 0    │ online    │ 0%       │ 133.5mb  │
+│ 1  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 60.1mb   │
+│ 2  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 103.1mb  │
+│ 25 │ sinjapanai         │ fork     │ 0    │ online    │ 0%       │ 113.0mb  │
+│ 30 │ sinjapanailive-api │ fork     │ 0    │ online    │ 0%       │ 117.1mb  │
+│ 39 │ sinjapanaisite-api │ fork     │ 4    │ online    │ 0%       │ 190.0mb  │
+│ 40 │ tiktokshindan      │ fork     │ 0    │ online    │ 0%       │ 19.1mb   │
+│ 38 │ tramatch           │ fork     │ 0    │ online    │ 0%       │ 227.4mb  │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+root@srv1087935:/var/www/tiktokshindan# curl -s http://localhost:3100/api/healthz
+root@srv1087935:/var/www/tiktokshindan# cat > /etc/nginx/sites-available/tiktokshindan << 'EOF'hindan << 'EOF'
+server {
+    listen 80;
+    server_name tiktokshindan.com www.tiktokshindan.com;
+
+    location / {
+        proxy_pass http://localhost:3100;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 10m;
+    }
+}
+EOF
+
+ln -s /etc/nginx/sites-available/tiktokshindan /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+root@srv1087935:/var/www/tiktokshindan# certbot --nginx -d tiktokshindan.com -d www.tiktokshindan.com
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for tiktokshindan.com and www.tiktokshindan.com
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/tiktokshindan.com/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/tiktokshindan.com/privkey.pem
+This certificate expires on 2026-06-29.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+
+Deploying certificate
+Successfully deployed certificate for tiktokshindan.com to /etc/nginx/sites-enabled/tiktokshindan
+Successfully deployed certificate for www.tiktokshindan.com to /etc/nginx/sites-enabled/tiktokshindan
+Congratulations! You have successfully enabled HTTPS on https://tiktokshindan.com and https://www.tiktokshindan.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+root@srv1087935:/var/www/tiktokshindan# 
