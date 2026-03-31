@@ -104,16 +104,57 @@ const rankDescs: Record<string, string> = {
 };
 
 // ===== 共通スコア計算（フォールバック用） =====
-function calcScores(followers: number, likes: number, hasBio: boolean, isBusiness: boolean) {
-  const safeFollowers = Math.max(0, followers || 0);
-  const safeLikes = Math.max(0, likes || 0);
-  const engagement = safeFollowers > 0 ? (safeLikes / safeFollowers) * 100 : 0;
-  const buzzPotential = Math.min(100, Math.max(0, Math.floor(engagement * 2 + (safeFollowers / 10000) * 10)));
-  const engagementScore = Math.min(100, Math.max(0, Math.floor(engagement * 3)));
-  const profileScore = hasBio ? 60 : 30;
-  const consistencyScore = 65;
-  const monetizationScore = isBusiness ? 50 : 35;
-  const total = Math.max(0, Math.floor((buzzPotential + engagementScore + profileScore + consistencyScore + monetizationScore) / 5));
+function calcScores(followers: number, likes: number, hasBio: boolean, isBusiness: boolean, videoCount = 0) {
+  const safeFollowers = Math.max(followers || 0, 1);
+
+  // フォロワー数ベースの基礎スコア（主軸）
+  const buzzPotential = (() => {
+    if (safeFollowers >= 50_000_000) return 96;
+    if (safeFollowers >= 10_000_000) return 88;
+    if (safeFollowers >= 5_000_000)  return 82;
+    if (safeFollowers >= 1_000_000)  return 74;
+    if (safeFollowers >= 500_000)    return 66;
+    if (safeFollowers >= 100_000)    return 58;
+    if (safeFollowers >= 50_000)     return 50;
+    if (safeFollowers >= 10_000)     return 41;
+    if (safeFollowers >= 5_000)      return 34;
+    if (safeFollowers >= 1_000)      return 26;
+    return 14;
+  })();
+
+  // 動画1本あたり平均いいね÷フォロワー（実態に近いエンゲージメント）
+  const avgLikesPerVideo = videoCount > 0 ? (likes || 0) / videoCount : 0;
+  const perVideoEngRate = safeFollowers > 0 ? (avgLikesPerVideo / safeFollowers) * 100 : 0;
+  const engagementScore = Math.min(100, Math.max(0, Math.floor(perVideoEngRate * 6)));
+
+  // プロフィール充実度
+  const profileScore = hasBio ? 62 : 22;
+
+  // 継続性（計測不能なので中立）
+  const consistencyScore = 52;
+
+  // マネタイズ
+  const monetizationScore = isBusiness ? 55 : 28;
+
+  // totalはフォロワー基礎点＋小ボーナス（平均ではなく直接計算）
+  const engBonus  = Math.min(6, Math.floor(perVideoEngRate * 1.5));
+  const bioBonus  = hasBio ? 3 : 0;
+  const bizBonus  = isBusiness ? 2 : 0;
+  const base = (() => {
+    if (safeFollowers >= 50_000_000) return 91;
+    if (safeFollowers >= 10_000_000) return 85;
+    if (safeFollowers >= 5_000_000)  return 79;
+    if (safeFollowers >= 1_000_000)  return 71;
+    if (safeFollowers >= 500_000)    return 63;
+    if (safeFollowers >= 100_000)    return 55;
+    if (safeFollowers >= 50_000)     return 48;
+    if (safeFollowers >= 10_000)     return 40;
+    if (safeFollowers >= 5_000)      return 34;
+    if (safeFollowers >= 1_000)      return 26;
+    return 14;
+  })();
+  const total = Math.min(100, base + engBonus + bioBonus + bizBonus);
+
   let rank: string;
   if (total >= 84) rank = "GOD";
   else if (total >= 71) rank = "S";
@@ -152,14 +193,21 @@ async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
 公認バッジ: ${profile.verified ? "あり" : "なし"}
 ビジネスアカウント: ${profile.is_business ? "はい" : "いいえ"}
 
-【重要】スコアリングガイドライン（ポジティブ・甘め評価）:
-- フォロワー数でbuzzPotentialを決める目安（1,000人→55点、1万→68点、10万→82点、100万→93点、1000万以上→100点）
-- エンゲージメント率0.5%以上は良好（TikTok平均は0.3〜1%）、2%以上は優秀として高得点
-- 動画を投稿しているだけでconsistencyScoreは60点以上からスタート
-- bioがなくても大きく減点しない（profileScoreの最低は50点）
-- すべてのスコアは基本60点以上を出発点として加点方式で考えること
-- 公認バッジありは全スコア+5点ボーナス
-- ユーザーが励まされ、もっと頑張ろうと思えるような前向きな評価をすること
+【重要】スコアリングガイドライン（フォロワー数ベース・現実的評価）:
+- totalスコアは主にフォロワー数で決まる（下記ティア参照）
+- 1,000人未満 → total 14〜20（ほぼC確定）
+- 1,000〜9,999人 → total 26〜35（C〜B下位）
+- 1万〜4.9万人 → total 40〜48（B）
+- 5万〜9.9万人 → total 48〜55（B上位〜A下位）
+- 10万〜49.9万人 → total 55〜63（A）
+- 50万〜99.9万人 → total 63〜70（A上位〜S下位）
+- 100万〜499万人 → total 71〜78（S）
+- 500万〜4999万人 → total 79〜84（S上位〜GOD）
+- 5000万人以上 → total 85〜100（GOD確定）
+- engagementScore・bioBonus・bizBonusで最大+11点の補正可（基本上振れのみ）
+- GODは本物の有名人・世界的インフルエンサーのみ。一般クリエイターには絶対に付けない
+- 日本の一般TikTokerはほぼB〜C。10万フォロワーあってようやくAが見えてくるレベル
+- 公認バッジありは+3点ボーナス
 
 返却JSON形式:
 {
@@ -180,14 +228,14 @@ async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
 titleは「完全にバズる人間」「爆発まで秒読み」のような、インパクトがあってTikTokっぽい面白いコピーにすること。
 
 ランク基準（totalスコアで判定）:
-- GOD: 82以上（真のトップクリエイター・完成されたアカウント）
-- S: 68〜81（強い影響力・インフルエンサー級）
-- A: 56〜67（成長中・大きな可能性あり）
-- B: 42〜55（伸び代あり・改善で飛躍できる）
-- C: 41以下（初期段階・基礎から強化）
+- GOD: 84以上（有名人・世界級インフルエンサーのみ）
+- S: 71〜83（100万フォロワー超の実力派）
+- A: 58〜70（10万フォロワー超・バズってる人）
+- B: 44〜57（1万〜10万フォロワー・成長中）
+- C: 43以下（一般クリエイター・これからの人）
 
-ランク分布目安: GOD 3%、S 12%、A 35%、B 35%、C 15%
-（多くのユーザーがA〜Bランクに入るよう、バランス良く評価すること）`;
+ランク分布目安: GOD 2%、S 8%、A 20%、B 40%、C 30%
+（一般的なTikTokerの大多数はB〜Cになるよう、フォロワー数を軸に厳しく評価すること）`;
 
   const aiRes = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -294,7 +342,7 @@ router.post("/diagnose", upload.single("image"), async (req, res) => {
 
   const followers = (tiktokData["followers"] as number) || 0;
   const likes = (tiktokData["likes"] as number) || 0;
-  const scores = calcScores(followers, likes, !!tiktokData["bio"], !!tiktokData["is_business"]);
+  const scores = calcScores(followers, likes, !!tiktokData["bio"], !!tiktokData["is_business"], (tiktokData["videoCount"] as number) || 0);
   const { pref, city } = await getGeo(req as Parameters<typeof getGeo>[0]);
   const userId = uuidv4();
 
@@ -333,7 +381,7 @@ router.post("/diagnose-by-username", async (req, res) => {
     ai = await analyzeWithAI(profile);
   } catch (err) {
     req.log.warn({ err }, "AI analysis failed, falling back to formula");
-    const s = calcScores(profile.followers, profile.likes, !!profile.bio, profile.is_business);
+    const s = calcScores(profile.followers, profile.likes, !!profile.bio, profile.is_business, profile.videoCount || 0);
     ai = {
       rank: s.rank, title: rankTitles[s.rank], desc: rankDescs[s.rank],
       buzzPotential: s.buzzPotential, engagementScore: s.engagementScore,
