@@ -360,6 +360,36 @@
     font-weight: 300;
   }
 
+  /* ===== 保存用ライトモード（html2canvas用） ===== */
+  #result-card.snapshot-light {
+    background: #ffffff !important;
+    color: #0d0d0d !important;
+  }
+  #result-card.snapshot-light .card-username { color: #0d0d0d !important; }
+  #result-card.snapshot-light .card-date { color: #999 !important; }
+  #result-card.snapshot-light .card-brand { color: #ccc !important; }
+  #result-card.snapshot-light .card-user { border-bottom-color: #ebebeb !important; }
+  #result-card.snapshot-light .card-avatar { border-color: #e0e0e0 !important; background: #f0f0f0 !important; }
+  #result-card.snapshot-light .rank-badge { color: #0d0d0d !important; }
+  #result-card.snapshot-light .rank-badge.rank-s { color: #b8860b !important; }
+  #result-card.snapshot-light .rank-badge.rank-a { color: #333 !important; }
+  #result-card.snapshot-light .rank-badge.rank-b { color: #7a5c2e !important; }
+  #result-card.snapshot-light .rank-badge.rank-c { color: #666 !important; }
+  #result-card.snapshot-light .rank-label { color: #bbb !important; }
+  #result-card.snapshot-light .rank-title { color: #0d0d0d !important; }
+  #result-card.snapshot-light .card-desc {
+    color: #555 !important;
+    border-bottom-color: #ebebeb !important;
+  }
+  #result-card.snapshot-light .card-score-name { color: #999 !important; }
+  #result-card.snapshot-light .card-score-val { color: #333 !important; }
+  #result-card.snapshot-light .card-score-bar { background: #ebebeb !important; }
+  #result-card.snapshot-light .card-score-fill { background: #0d0d0d !important; }
+  #result-card.snapshot-light .card-total { border-top-color: #ebebeb !important; }
+  #result-card.snapshot-light .card-total-label { color: #ccc !important; }
+  #result-card.snapshot-light .card-total-num { color: #0d0d0d !important; }
+  #result-card.snapshot-light .card-total-max { color: #bbb !important; }
+
   /* 分析 */
   .analysis-wrap {
     border: 1px solid var(--gray5);
@@ -1051,12 +1081,25 @@
     }
     const card = document.getElementById('result-card');
     if (typeof html2canvas !== 'undefined') {
-      html2canvas(card, { scale: 2, backgroundColor: '#0d0d0d' }).then(canvas => {
-        const a = document.createElement('a');
-        a.download = 'tiktok-diagnosis.png';
-        a.href = canvas.toDataURL('image/png');
-        a.click();
-        showToast('保存しました');
+      card.classList.add('snapshot-light');
+      // DOMへの反映を待ってからキャプチャ
+      requestAnimationFrame(() => {
+        html2canvas(card, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          logging: false,
+        }).then(canvas => {
+          card.classList.remove('snapshot-light');
+          const a = document.createElement('a');
+          a.download = 'tiktok-diagnosis.png';
+          a.href = canvas.toDataURL('image/png');
+          a.click();
+          showToast('保存しました');
+        }).catch(() => {
+          card.classList.remove('snapshot-light');
+          showToast('保存に失敗しました');
+        });
       });
     } else {
       showToast('画面をスクショして保存してください');
