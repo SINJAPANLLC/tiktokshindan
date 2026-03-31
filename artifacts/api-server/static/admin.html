@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0d0d0d; --white: #f8f8f8;
+    --g1: #141414; --g2: #1e1e1e; --g3: #2a2a2a; --g4: #555; --g5: #888; --g6: #ccc;
+    --green: #4ade80; --red: #ff4444; --yellow: #ffd700;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--black); color: var(--white); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; }
+
+  /* LOGIN */
+  #screen-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-box { width: 320px; padding: 48px 36px; border: 1px solid #222; border-radius: 4px; }
+  .login-logo { font-size: 10px; font-weight: 700; letter-spacing: 0.35em; color: var(--g5); text-transform: uppercase; margin-bottom: 32px; }
+  .login-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.05em; margin-bottom: 32px; }
+  .login-input { width: 100%; padding: 14px 16px; background: #111; border: 1px solid #333; border-radius: 4px; color: var(--white); font-size: 14px; font-family: 'Noto Sans JP', sans-serif; margin-bottom: 12px; outline: none; transition: border-color 0.2s; letter-spacing: 0.1em; }
+  .login-input:focus { border-color: var(--white); }
+  .login-btn { width: 100%; padding: 14px; background: var(--white); color: var(--black); border: none; border-radius: 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.2em; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; }
+  .login-btn:hover { background: #ddd; }
+  .login-error { font-size: 11px; color: var(--red); margin-top: 10px; text-align: center; min-height: 16px; }
+
+  /* DASHBOARD */
+  #screen-dashboard { display: none; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 32px; border-bottom: 1px solid #1a1a1a; position: sticky; top: 0; background: var(--black); z-index: 100; }
+  .topbar-logo { font-size: 10px; font-weight: 700; letter-spacing: 0.35em; color: var(--g5); text-transform: uppercase; }
+  .topbar-right { display: flex; align-items: center; gap: 20px; }
+  .topbar-date { font-size: 11px; color: var(--g5); font-weight: 300; }
+  .logout-btn { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; color: var(--g5); background: none; border: 1px solid #333; border-radius: 2px; padding: 6px 14px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; transition: all 0.2s; text-transform: uppercase; }
+  .logout-btn:hover { color: var(--white); border-color: var(--white); }
+
+  .dash-body { padding: 32px; max-width: 1200px; margin: 0 auto; }
+
+  .sec-label { font-size: 10px; font-weight: 700; letter-spacing: 0.3em; color: var(--g5); text-transform: uppercase; margin-bottom: 12px; margin-top: 32px; }
+  .sec-label:first-child { margin-top: 0; }
+
+  /* グリッド */
+  .g5col { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+  .g4col { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+  .g3col { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .g2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media(max-width:900px){ .g5col,.g4col { grid-template-columns: repeat(3,1fr); } .g3col { grid-template-columns: repeat(2,1fr); } }
+  @media(max-width:600px){ .g5col,.g4col,.g3col,.g2col { grid-template-columns: 1fr; } }
+
+  /* KPI */
+  .kpi { background: var(--g1); border: 1px solid #222; border-radius: 4px; padding: 16px; }
+  .kpi-lbl { font-size: 9px; color: var(--g5); font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+  .kpi-val { font-family: 'Bebas Neue', sans-serif; font-size: 36px; line-height: 1; margin-bottom: 3px; }
+  .kpi-sub { font-size: 10px; color: var(--g5); font-weight: 300; }
+  .kpi-delta { font-size: 10px; font-weight: 700; margin-top: 3px; }
+  .up { color: var(--green); } .dn { color: var(--red); }
+
+  /* パネル */
+  .panel { background: var(--g1); border: 1px solid #222; border-radius: 4px; padding: 18px; }
+  .panel-title { font-size: 9px; font-weight: 700; letter-spacing: 0.25em; color: var(--g5); text-transform: uppercase; margin-bottom: 14px; }
+
+  /* バーチャート */
+  .bars { display: flex; align-items: flex-end; gap: 4px; }
+  .bw { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; justify-content: flex-end; }
+  .b { width: 100%; background: var(--white); border-radius: 2px 2px 0 0; min-height: 2px; cursor: pointer; position: relative; transition: background 0.2s; }
+  .b:hover { background: #aaa; }
+  .btt { position: absolute; bottom: calc(100%+4px); left: 50%; transform: translateX(-50%); background: var(--white); color: var(--black); font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 2px; white-space: nowrap; display: none; z-index: 10; }
+  .b:hover .btt { display: block; }
+  .bl { font-size: 8px; color: var(--g5); white-space: nowrap; text-align: center; }
+
+  /* 横バー */
+  .hbar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .hbar-row:last-child { margin-bottom: 0; }
+  .hbar-lbl { font-size: 11px; font-weight: 300; width: 88px; flex-shrink: 0; color: var(--g6); }
+  .hbar-wrap { flex: 1; height: 4px; background: #222; border-radius: 2px; overflow: hidden; }
+  .hbar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+  .hbar-fill.white { background: var(--white); }
+  .hbar-fill.red { background: var(--red); }
+  .hbar-fill.green { background: var(--green); }
+  .hbar-val { font-size: 11px; font-weight: 700; width: 40px; text-align: right; flex-shrink: 0; }
+
+  /* 縦リスト */
+  .vrow { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1a1a1a; font-size: 12px; }
+  .vrow:last-child { border-bottom: none; padding-bottom: 0; }
+  .vrow:first-child { padding-top: 0; }
+  .vl { font-weight: 300; color: var(--g5); }
+  .vv { font-weight: 700; }
+
+  /* ランクカラー */
+  .god { color: #fff; } .s { color: #ffd700; } .a { color: #e8e8e8; } .b { color: #c8a97e; } .c { color: #888; }
+  .rname { font-family: 'Bebas Neue', sans-serif; font-size: 16px; width: 36px; flex-shrink: 0; }
+  .rchip { font-family: 'Bebas Neue', sans-serif; font-size: 13px; padding: 2px 6px; border-radius: 2px; background: #222; }
+
+  /* テーブル */
+  .utbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .utbl th { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: var(--g5); text-transform: uppercase; text-align: left; padding: 0 6px 10px 0; border-bottom: 1px solid #222; white-space: nowrap; }
+  .utbl td { padding: 9px 6px 9px 0; border-bottom: 1px solid #1a1a1a; vertical-align: middle; color: var(--g6); white-space: nowrap; }
+  .utbl tr:last-child td { border-bottom: none; }
+
+  /* サムネイル */
+  .thumb-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 6px; }
+  @media(max-width:800px){ .thumb-grid { grid-template-columns: repeat(5,1fr); } }
+  .thumb-item { position: relative; cursor: pointer; }
+  .thumb-item img { width: 100%; aspect-ratio: 9/16; object-fit: cover; border-radius: 3px; border: 1px solid #222; display: block; transition: opacity 0.2s; }
+  .thumb-item:hover img { opacity: 0.6; }
+  .thumb-rank { position: absolute; top: 3px; left: 3px; font-family: 'Bebas Neue', sans-serif; font-size: 11px; background: rgba(0,0,0,0.75); padding: 1px 4px; border-radius: 2px; }
+  .thumb-time { position: absolute; bottom: 3px; left: 3px; font-size: 8px; color: rgba(255,255,255,0.5); }
+
+  /* モーダル */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal.open { display: flex; }
+  .modal-inner { background: var(--g1); border: 1px solid #333; border-radius: 4px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-img { width: 100%; display: block; max-height: 280px; object-fit: cover; border-radius: 4px 4px 0 0; }
+  .modal-body { padding: 18px; }
+  .modal-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1e1e1e; font-size: 12px; }
+  .modal-row:last-child { border-bottom: none; }
+  .modal-lbl { color: var(--g5); font-weight: 300; }
+  .modal-val { font-weight: 700; max-width: 60%; text-align: right; word-break: break-all; }
+  .modal-close { display: block; width: 100%; padding: 13px; background: #222; border: none; color: var(--white); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; border-radius: 0 0 4px 4px; }
+  .modal-close:hover { background: #333; }
+
+  .divider { height: 1px; background: #222; margin: 12px 0; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+  .dot.yes { background: #06c755; } .dot.no { background: #333; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login">
+  <div class="login-box">
+    <div class="login-logo">Sin Japan</div>
+    <div class="login-title">ADMIN</div>
+    <input type="password" class="login-input" id="pwInput" placeholder="パスワード" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">ログイン</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard">
+  <div class="topbar">
+    <div class="topbar-logo">Sin Japan — Admin</div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="topbarDate"></div>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- KPI -->
+    <div class="sec-label">Overview</div>
+    <div class="g5col" style="margin-bottom:10px">
+      <div class="kpi"><div class="kpi-lbl">総診断数</div><div class="kpi-val">1,284</div><div class="kpi-sub">累計</div><div class="kpi-delta up">+38 今日</div></div>
+      <div class="kpi"><div class="kpi-lbl">LINE登録数</div><div class="kpi-val">312</div><div class="kpi-sub">累計</div><div class="kpi-delta up">+11 今日</div></div>
+      <div class="kpi"><div class="kpi-lbl">LINE CVR</div><div class="kpi-val">24.3%</div><div class="kpi-sub">診断→LINE</div><div class="kpi-delta up">+1.2% 前週</div></div>
+      <div class="kpi"><div class="kpi-lbl">保存率</div><div class="kpi-val">61.7%</div><div class="kpi-sub">結果保存</div><div class="kpi-delta dn">-0.8% 前週</div></div>
+      <div class="kpi"><div class="kpi-lbl">リピート率</div><div class="kpi-val">18.4%</div><div class="kpi-sub">再診断</div><div class="kpi-delta up">+2.1% 前週</div></div>
+    </div>
+    <div class="g4col" style="margin-bottom:10px">
+      <div class="kpi"><div class="kpi-lbl">平均滞在時間</div><div class="kpi-val">2:14</div><div class="kpi-sub">分:秒</div></div>
+      <div class="kpi"><div class="kpi-lbl">完了率</div><div class="kpi-val">81.1%</div><div class="kpi-sub">診断完了</div></div>
+      <div class="kpi"><div class="kpi-lbl">ランク別最高CVR</div><div class="kpi-val">GOD</div><div class="kpi-sub" style="color:var(--yellow)">LINE CVR 41.2%</div></div>
+      <div class="kpi"><div class="kpi-lbl">再訪平均間隔</div><div class="kpi-val">3.2日</div><div class="kpi-sub">リピーター</div></div>
+    </div>
+
+    <!-- 日別チャート -->
+    <div class="sec-label">日別診断数（直近14日）</div>
+    <div class="panel" style="margin-bottom:10px">
+      <div class="bars" style="height:100px" id="dailyChart"></div>
+    </div>
+
+    <!-- 時間帯 + 曜日別 -->
+    <div class="g2col" style="margin-bottom:10px">
+      <div class="panel">
+        <div class="panel-title">時間帯別アクセス</div>
+        <div class="bars" style="height:80px" id="hourChart"></div>
+        <div style="display:flex;gap:3px;margin-top:6px" id="hourLabels"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">曜日別診断数</div>
+        <div class="bars" style="height:80px" id="weekChart"></div>
+        <div style="display:flex;gap:3px;margin-top:6px" id="weekLabels"></div>
+      </div>
+    </div>
+
+    <!-- ランク + ファネル + ランク別CVR -->
+    <div class="sec-label">診断分析</div>
+    <div class="g3col" style="margin-bottom:10px">
+      <div class="panel">
+        <div class="panel-title">ランク分布</div>
+        <div id="rankDist"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">CVRファネル</div>
+        <div id="funnelPanel"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">ランク別 LINE CVR</div>
+        <div id="rankCvr"></div>
+      </div>
+    </div>
+
+    <!-- ランク別保存率 + 離脱ポイント -->
+    <div class="g2col" style="margin-bottom:10px">
+      <div class="panel">
+        <div class="panel-title">ランク別 保存率</div>
+        <div id="rankSave"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">離脱ポイント</div>
+        <div id="exitPanel"></div>
+      </div>
+    </div>
+
+    <!-- 滞在時間 + スクロール深度 + 操作回数 -->
+    <div class="g3col" style="margin-bottom:10px">
+      <div class="panel">
+        <div class="panel-title">ステップ別滞在時間</div>
+        <div class="vrow"><span class="vl">ページ全体</span><span class="vv">2分14秒</span></div>
+        <div class="vrow"><span class="vl">アップロード→診断</span><span class="vv">0分38秒</span></div>
+        <div class="vrow"><span class="vl">結果ページ滞在</span><span class="vv">1分31秒</span></div>
+        <div class="vrow"><span class="vl">LINE誘導まで</span><span class="vv">0分52秒</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">スクロール深度</div>
+        <div id="scrollDepth"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">平均操作回数</div>
+        <div class="vrow"><span class="vl">タップ数</span><span class="vv">8.3回</span></div>
+        <div class="vrow"><span class="vl">アップロード試行</span><span class="vv">1.2回</span></div>
+        <div class="vrow"><span class="vl">結果再確認</span><span class="vv">2.4回</span></div>
+        <div class="vrow"><span class="vl">LINEボタンタップ</span><span class="vv">1.8回</span></div>
+      </div>
+    </div>
+
+    <!-- 地域 + デバイス + ブラウザ/言語/通信 -->
+    <div class="sec-label">ユーザー属性</div>
+    <div class="g3col" style="margin-bottom:10px">
+      <div class="panel">
+        <div class="panel-title">都道府県 TOP10</div>
+        <div id="geoList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">市区町村 TOP8</div>
+        <div id="cityList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">デバイス</div>
+        <div class="vrow"><span class="vl">iOS</span><span class="vv">58.4%</span></div>
+        <div class="vrow"><span class="vl">Android</span><span class="vv">34.1%</span></div>
+        <div class="vrow"><span class="vl">PC</span><span class="vv">7.5%</span></div>
+        <div class="divider"></div>
+        <div class="panel-title">画面サイズ TOP3</div>
+        <div class="vrow"><span class="vl">390×844</span><span class="vv">31.2%</span></div>
+        <div class="vrow"><span class="vl">375×812</span><span class="vv">22.8%</span></div>
+        <div class="vrow"><span class="vl">414×896</span><span class="vv">18.4%</span></div>
+      </div>
+    </div>
+
+    <div class="g4col" style="margin-bottom:10px">
+      <div class="panel">
+        <div class="panel-title">流入元</div>
+        <div class="vrow"><span class="vl">TikTok</span><span class="vv">44.2%</span></div>
+        <div class="vrow"><span class="vl">X (Twitter)</span><span class="vv">28.7%</span></div>
+        <div class="vrow"><span class="vl">直接アクセス</span><span class="vv">18.3%</span></div>
+        <div class="vrow"><span class="vl">その他</span><span class="vv">8.8%</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">ブラウザ</div>
+        <div class="vrow"><span class="vl">Chrome</span><span class="vv">48.2%</span></div>
+        <div class="vrow"><span class="vl">Safari</span><span class="vv">38.7%</span></div>
+        <div class="vrow"><span class="vl">TikTok内ブラウザ</span><span class="vv">9.4%</span></div>
+        <div class="vrow"><span class="vl">その他</span><span class="vv">3.7%</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">ブラウザ言語</div>
+        <div class="vrow"><span class="vl">日本語 (ja)</span><span class="vv">91.2%</span></div>
+        <div class="vrow"><span class="vl">英語 (en)</span><span class="vv">5.4%</span></div>
+        <div class="vrow"><span class="vl">中国語 (zh)</span><span class="vv">2.1%</span></div>
+        <div class="vrow"><span class="vl">その他</span><span class="vv">1.3%</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">通信速度</div>
+        <div class="vrow"><span class="vl">4G/5G</span><span class="vv">71.3%</span></div>
+        <div class="vrow"><span class="vl">WiFi</span><span class="vv">24.8%</span></div>
+        <div class="vrow"><span class="vl">3G以下</span><span class="vv">3.9%</span></div>
+        <div class="divider"></div>
+        <div class="panel-title">スクショ解像度</div>
+        <div class="vrow"><span class="vl">1080×1920</span><span class="vv">44.2%</span></div>
+        <div class="vrow"><span class="vl">1170×2532</span><span class="vv">28.7%</span></div>
+        <div class="vrow"><span class="vl">その他</span><span class="vv">27.1%</span></div>
+      </div>
+    </div>
+
+    <!-- 画像サムネイル -->
+    <div class="sec-label">アップロード画像（直近）</div>
+    <div class="panel" style="margin-bottom:10px">
+      <div class="thumb-grid" id="thumbGrid"></div>
+    </div>
+
+    <!-- ユーザーログ -->
+    <div class="sec-label">直近ユーザーログ</div>
+    <div class="panel" style="margin-bottom:48px; overflow-x:auto">
+      <table class="utbl">
+        <thead>
+          <tr>
+            <th>日時</th>
+            <th>画像</th>
+            <th>ユーザー名</th>
+            <th>ランク</th>
+            <th>スコア</th>
+            <th>フォロワー</th>
+            <th>都道府県</th>
+            <th>市区町村</th>
+            <th>デバイス</th>
+            <th>ブラウザ</th>
+            <th>言語</th>
+            <th>通信</th>
+            <th>滞在</th>
+            <th>操作数</th>
+            <th>スクロール</th>
+            <th>再訪</th>
+            <th>LINE</th>
+            <th>保存</th>
+          </tr>
+        </thead>
+        <tbody id="userTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- モーダル -->
+<div class="modal" id="modal" onclick="closeModal()">
+  <div class="modal-inner" onclick="event.stopPropagation()">
+    <img class="modal-img" id="modalImg" src="" alt="">
+    <div class="modal-body" id="modalBody"></div>
+    <button class="modal-close" onclick="closeModal()">閉じる</button>
+  </div>
+</div>
+
+<script>
+  const PASSWORD = 'sinjapan2025';
+
+  function doLogin() {
+    if (document.getElementById('pwInput').value === PASSWORD) {
+      document.getElementById('screen-login').style.display = 'none';
+      document.getElementById('screen-dashboard').style.display = 'block';
+      initDashboard();
+    } else {
+      document.getElementById('loginError').textContent = 'パスワードが違います';
+      document.getElementById('pwInput').value = '';
+    }
+  }
+  function doLogout() {
+    document.getElementById('screen-dashboard').style.display = 'none';
+    document.getElementById('screen-login').style.display = 'flex';
+    document.getElementById('pwInput').value = '';
+  }
+
+  function makeThumb(seed) {
+    const c = document.createElement('canvas'); c.width=90; c.height=160;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0,0,0,160);
+    const shades=['#1a1a1a','#222','#2a2a2a','#333','#3a3a3a'];
+    g.addColorStop(0,shades[seed%5]); g.addColorStop(1,shades[(seed+2)%5]);
+    ctx.fillStyle=g; ctx.fillRect(0,0,90,160);
+    ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.font='bold 10px sans-serif';
+    ctx.textAlign='center'; ctx.fillText('@user'+(seed+1),45,85);
+    ctx.fillStyle='rgba(255,255,255,0.07)';
+    ctx.fillRect(18,95,54,3); ctx.fillRect(22,103,46,3);
+    return c.toDataURL();
+  }
+
+  const users = [
+    { time:'14:32', user:'@tiktok_pro99',  rank:'GOD', cls:'god', score:98, followers:'12.4万', pref:'東京都',  city:'渋谷区',  device:'iOS',     browser:'Safari',  lang:'ja', net:'5G',   dwell:'3:12', ops:12, scroll:'94%', revisit:3,  line:true,  save:true  },
+    { time:'14:28', user:'@dance_yuki',    rank:'A',   cls:'a',   score:81, followers:'8,200',  pref:'大阪府',  city:'梅田',    device:'Android', browser:'Chrome',  lang:'ja', net:'WiFi', dwell:'1:58', ops:9,  scroll:'78%', revisit:1,  line:true,  save:true  },
+    { time:'14:21', user:'@kanagawa_vlog', rank:'B',   cls:'b',   score:69, followers:'3,400',  pref:'神奈川県',city:'横浜市',  device:'iOS',     browser:'Safari',  lang:'ja', net:'4G',   dwell:'1:22', ops:7,  scroll:'61%', revisit:1,  line:false, save:true  },
+    { time:'14:15', user:'@fukuoka_life',  rank:'S',   cls:'s',   score:91, followers:'9,800',  pref:'福岡県',  city:'博多区',  device:'iOS',     browser:'Safari',  lang:'ja', net:'5G',   dwell:'2:44', ops:11, scroll:'88%', revisit:2,  line:true,  save:true  },
+    { time:'14:09', user:'@aichi_cook',    rank:'C',   cls:'c',   score:47, followers:'1,100',  pref:'愛知県',  city:'名古屋市',device:'Android', browser:'Chrome',  lang:'ja', net:'4G',   dwell:'0:51', ops:4,  scroll:'42%', revisit:1,  line:false, save:false },
+    { time:'14:02', user:'@tokyo_fit',     rank:'A',   cls:'a',   score:78, followers:'5,600',  pref:'東京都',  city:'新宿区',  device:'iOS',     browser:'Safari',  lang:'ja', net:'WiFi', dwell:'1:44', ops:8,  scroll:'72%', revisit:4,  line:true,  save:true  },
+    { time:'13:58', user:'@saitama_vlog',  rank:'B',   cls:'b',   score:72, followers:'4,200',  pref:'埼玉県',  city:'さいたま市',device:'Android',browser:'Chrome', lang:'ja', net:'4G',   dwell:'1:31', ops:8,  scroll:'67%', revisit:1,  line:false, save:true  },
+    { time:'13:44', user:'@chiba_music',   rank:'S',   cls:'s',   score:88, followers:'7,300',  pref:'千葉県',  city:'千葉市',  device:'iOS',     browser:'Safari',  lang:'ja', net:'5G',   dwell:'2:08', ops:10, scroll:'83%', revisit:2,  line:true,  save:true  },
+  ];
+
+  async function initDashboard() {
+    const d = new Date();
+    document.getElementById('topbarDate').textContent =
+      `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+
+    // APIからリアルデータ取得（失敗時はダミーデータにフォールバック）
+    try {
+      const [statsRes, usersRes] = await Promise.all([
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/users')
+      ]);
+      const stats = await statsRes.json();
+      const apiUsers = await usersRes.json();
+      if (stats.overview) applyStats(stats);
+      if (apiUsers.length) applyUsers(apiUsers);
+    } catch(e) {
+      console.log('API未接続 - ダミーデータで表示');
+    }
+
+    // 日別
+    const days=['3/18','3/19','3/20','3/21','3/22','3/23','3/24','3/25','3/26','3/27','3/28','3/29','3/30','3/31'];
+    const dvals=[22,18,31,27,44,38,52,41,63,58,71,67,84,38];
+    const dmax=Math.max(...dvals);
+    document.getElementById('dailyChart').innerHTML=days.map((d,i)=>`
+      <div class="bw"><div class="b" style="height:${Math.round(dvals[i]/dmax*100)}%"><div class="btt">${dvals[i]}件</div></div><div class="bl">${d}</div></div>`).join('');
+
+    // 時間帯
+    const hvals=[2,1,0,1,3,8,18,34,52,61,58,63,71,68,74,80,77,82,91,88,76,64,44,28];
+    const hmax=Math.max(...hvals);
+    document.getElementById('hourChart').innerHTML=hvals.map((v,i)=>`
+      <div class="bw"><div class="b" style="height:${Math.round(v/hmax*100)}%"><div class="btt">${i}時: ${v}件</div></div></div>`).join('');
+    document.getElementById('hourLabels').innerHTML=hvals.map((_,i)=>`
+      <div style="flex:1;font-size:8px;color:var(--g5);text-align:center">${i%6===0?i+'時':''}</div>`).join('');
+
+    // 曜日別
+    const wdays=['月','火','水','木','金','土','日'];
+    const wvals=[142,168,154,181,198,224,217];
+    const wmax=Math.max(...wvals);
+    document.getElementById('weekChart').innerHTML=wdays.map((d,i)=>`
+      <div class="bw"><div class="b" style="height:${Math.round(wvals[i]/wmax*100)}%"><div class="btt">${d}: ${wvals[i]}件</div></div><div class="bl">${d}</div></div>`).join('');
+
+    // ランク分布
+    const ranks=[{n:'GOD',cls:'god',cnt:28,pct:2.7},{n:'S',cls:'s',cnt:187,pct:18.0},{n:'A',cls:'a',cnt:341,pct:32.7},{n:'B',cls:'b',cnt:318,pct:30.6},{n:'C',cls:'c',cnt:167,pct:16.0}];
+    document.getElementById('rankDist').innerHTML=ranks.map(r=>`
+      <div class="hbar-row">
+        <div class="rname ${r.cls}">${r.n}</div>
+        <div class="hbar-wrap"><div class="hbar-fill white" style="width:${r.pct*2.8}%"></div></div>
+        <div class="hbar-val">${r.cnt}</div>
+      </div>`).join('');
+
+    // ファネル
+    [{l:'診断開始',v:'1,284',p:'100%'},{l:'診断完了',v:'1,041',p:'81.1%'},{l:'結果保存',v:'642',p:'61.7%'},{l:'LINE登録',v:'312',p:'30.0%'}].forEach(f=>{
+      document.getElementById('funnelPanel').innerHTML+=`
+        <div class="vrow"><span class="vl">${f.l}</span><div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:20px">${f.v}</div><div style="font-size:10px;color:var(--green);font-weight:700">${f.p}</div></div></div>`;
+    });
+
+    // ランク別LINE CVR
+    [{n:'GOD',cls:'god',pct:41.2},{n:'S',cls:'s',pct:35.8},{n:'A',cls:'a',pct:28.4},{n:'B',cls:'b',pct:19.2},{n:'C',cls:'c',pct:11.7}].forEach(r=>{
+      document.getElementById('rankCvr').innerHTML+=`
+        <div class="hbar-row">
+          <div class="rname ${r.cls}">${r.n}</div>
+          <div class="hbar-wrap"><div class="hbar-fill green" style="width:${r.pct*2}%"></div></div>
+          <div class="hbar-val" style="color:var(--green)">${r.pct}%</div>
+        </div>`;
+    });
+
+    // ランク別保存率
+    [{n:'GOD',cls:'god',pct:88.4},{n:'S',cls:'s',pct:79.2},{n:'A',cls:'a',pct:67.1},{n:'B',cls:'b',pct:54.8},{n:'C',cls:'c',pct:38.2}].forEach(r=>{
+      document.getElementById('rankSave').innerHTML+=`
+        <div class="hbar-row">
+          <div class="rname ${r.cls}">${r.n}</div>
+          <div class="hbar-wrap"><div class="hbar-fill white" style="width:${r.pct}%"></div></div>
+          <div class="hbar-val">${r.pct}%</div>
+        </div>`;
+    });
+
+    // 離脱ポイント
+    [{l:'アップロード画面',p:18.9},{l:'診断中（ロード）',p:8.2},{l:'結果確認後すぐ',p:24.3},{l:'保存ボタン前',p:28.1},{l:'LINE誘導前',p:20.5}].forEach(e=>{
+      document.getElementById('exitPanel').innerHTML+=`
+        <div class="hbar-row">
+          <div class="hbar-lbl">${e.l}</div>
+          <div class="hbar-wrap"><div class="hbar-fill red" style="width:${e.p*2.5}%"></div></div>
+          <div class="hbar-val" style="color:var(--red)">${e.p}%</div>
+        </div>`;
+    });
+
+    // スクロール深度
+    [{l:'25%まで',p:92.4},{l:'50%まで',p:78.1},{l:'75%まで',p:61.3},{l:'100%まで',p:44.8}].forEach(s=>{
+      document.getElementById('scrollDepth').innerHTML+=`
+        <div class="hbar-row">
+          <div class="hbar-lbl">${s.l}</div>
+          <div class="hbar-wrap"><div class="hbar-fill white" style="width:${s.p}%"></div></div>
+          <div class="hbar-val">${s.p}%</div>
+        </div>`;
+    });
+
+    // 都道府県
+    const geos=[{n:'東京都',cnt:312,pct:30},{n:'神奈川県',cnt:187,pct:18},{n:'大阪府',cnt:156,pct:15},{n:'愛知県',cnt:98,pct:9.4},{n:'福岡県',cnt:84,pct:8.1},{n:'埼玉県',cnt:67,pct:6.4},{n:'千葉県',cnt:58,pct:5.6},{n:'兵庫県',cnt:44,pct:4.2},{n:'北海道',cnt:38,pct:3.6},{n:'その他',cnt:240,pct:23}];
+    document.getElementById('geoList').innerHTML=geos.map(g=>`
+      <div class="hbar-row">
+        <div class="hbar-lbl">${g.n}</div>
+        <div class="hbar-wrap"><div class="hbar-fill white" style="width:${g.pct/30*100}%"></div></div>
+        <div class="hbar-val">${g.cnt}</div>
+      </div>`).join('');
+
+    // 市区町村
+    const cities=[{n:'渋谷区',cnt:84},{n:'新宿区',cnt:71},{n:'横浜市',cnt:68},{n:'梅田',cnt:52},{n:'博多区',cnt:44},{n:'名古屋市',cnt:41},{n:'さいたま市',cnt:38},{n:'千葉市',cnt:32}];
+    document.getElementById('cityList').innerHTML=cities.map(c=>`
+      <div class="hbar-row">
+        <div class="hbar-lbl">${c.n}</div>
+        <div class="hbar-wrap"><div class="hbar-fill white" style="width:${c.cnt/84*100}%"></div></div>
+        <div class="hbar-val">${c.cnt}</div>
+      </div>`).join('');
+
+    // サムネイル
+    document.getElementById('thumbGrid').innerHTML=users.map((u,i)=>`
+      <div class="thumb-item" onclick="openModal(${i})">
+        <img src="${makeThumb(i)}" alt="">
+        <div class="thumb-rank ${u.cls}">${u.rank}</div>
+        <div class="thumb-time">${u.time}</div>
+      </div>`).join('');
+
+    // ユーザーテーブル
+    document.getElementById('userTable').innerHTML=users.map((u,i)=>`
+      <tr>
+        <td style="color:var(--g5)">${u.time}</td>
+        <td><img src="${makeThumb(i)}" style="width:24px;height:42px;object-fit:cover;border-radius:2px;cursor:pointer" onclick="openModal(${i})"></td>
+        <td>${u.user}</td>
+        <td><span class="rchip ${u.cls}">${u.rank}</span></td>
+        <td>${u.score}</td>
+        <td>${u.followers}</td>
+        <td>${u.pref}</td>
+        <td>${u.city}</td>
+        <td>${u.device}</td>
+        <td>${u.browser}</td>
+        <td>${u.lang}</td>
+        <td>${u.net}</td>
+        <td>${u.dwell}</td>
+        <td>${u.ops}回</td>
+        <td>${u.scroll}</td>
+        <td>${u.revisit}回目</td>
+        <td><span class="dot ${u.line?'yes':'no'}"></span></td>
+        <td style="color:${u.save?'var(--green)':'var(--g4)'}">${u.save?'済':'−'}</td>
+      </tr>`).join('');
+  }
+
+  function openModal(i) {
+    const u=users[i];
+    document.getElementById('modalImg').src=makeThumb(i);
+    document.getElementById('modalBody').innerHTML=[
+      ['ユーザー名',u.user],['ランク',u.rank],['スコア',u.score+' / 100'],
+      ['フォロワー数',u.followers],['都道府県',u.pref],['市区町村',u.city],
+      ['デバイス',u.device],['ブラウザ',u.browser],['ブラウザ言語',u.lang],
+      ['通信速度',u.net],['滞在時間',u.dwell],['操作回数',u.ops+'回'],
+      ['スクロール深度',u.scroll],['再訪回数',u.revisit+'回目'],
+      ['LINE登録',u.line?'登録済':'未登録'],['結果保存',u.save?'保存済':'未保存'],
+      ['診断日時','2025.03.31 '+u.time],
+    ].map(([l,v])=>`
+      <div class="modal-row">
+        <span class="modal-lbl">${l}</span>
+        <span class="modal-val" style="color:${l==='LINE登録'?(u.line?'#06c755':'var(--g5)'):l==='結果保存'?(u.save?'var(--green)':'var(--g5)'):'var(--white)'}">${v}</span>
+      </div>`).join('');
+    document.getElementById('modal').classList.add('open');
+  }
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+  function applyStats(s) {
+    const o = s.overview || {};
+    // KPI上書き
+    const kpis = document.querySelectorAll('.kpi');
+    if (o.total != null) kpis[0].querySelector('.kpi-val').textContent = Number(o.total).toLocaleString();
+    if (o.line_total != null) kpis[1].querySelector('.kpi-val').textContent = Number(o.line_total).toLocaleString();
+    if (o.line_cvr != null) kpis[2].querySelector('.kpi-val').textContent = o.line_cvr + '%';
+    if (o.save_rate != null) kpis[3].querySelector('.kpi-val').textContent = o.save_rate + '%';
+    if (o.today != null) kpis[0].querySelector('.kpi-delta').textContent = '+' + o.today + ' 今日';
+    if (o.line_today != null) kpis[1].querySelector('.kpi-delta').textContent = '+' + o.line_today + ' 今日';
+    if (o.avg_dwell != null) {
+      const m = Math.floor(o.avg_dwell/60), sec = o.avg_dwell%60;
+      kpis[5].querySelector('.kpi-val').textContent = m+':'+String(sec).padStart(2,'0');
+    }
+  }
+
+  function applyUsers(apiUsers) {
+    // ユーザーテーブル更新
+    document.getElementById('userTable').innerHTML = apiUsers.map((u,i) => {
+      const t = new Date(u.created_at);
+      const time = String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+      const rank = u.rank || 'C';
+      const cls = rank.toLowerCase();
+      return `<tr>
+        <td style="color:var(--g5)">${time}</td>
+        <td>${u.image_url ? `<img src="${u.image_url}" style="width:24px;height:42px;object-fit:cover;border-radius:2px">` : '−'}</td>
+        <td>${u.tiktok_username || '−'}</td>
+        <td><span class="rchip ${cls}">${rank}</span></td>
+        <td>${u.score || 0}</td>
+        <td>${u.followers ? Number(u.followers).toLocaleString() : '−'}</td>
+        <td>${u.pref || '−'}</td>
+        <td>${u.city || '−'}</td>
+        <td>${u.device ? u.device.substring(0,20) : '−'}</td>
+        <td>${u.browser || '−'}</td>
+        <td>${u.language || '−'}</td>
+        <td>${u.network || '−'}</td>
+        <td>${u.dwell_time ? Math.floor(u.dwell_time/60)+':'+String(u.dwell_time%60).padStart(2,'0') : '−'}</td>
+        <td>${u.operation_count || '−'}回</td>
+        <td>${u.scroll_depth ? u.scroll_depth+'%' : '−'}</td>
+        <td>${u.revisit_count || 1}回目</td>
+        <td><span class="dot ${u.line_registered?'yes':'no'}"></span></td>
+        <td style="color:${u.saved?'var(--green)':'var(--g4)'}">${u.saved?'済':'−'}</td>
+      </tr>`;
+    }).join('');
+  }
+</script>
+</body>
+</html>
