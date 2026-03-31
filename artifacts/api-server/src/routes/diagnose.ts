@@ -3,7 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -42,7 +42,6 @@ router.post("/diagnose", upload.single("image"), async (req, res) => {
     return;
   }
 
-  const imageId = path.basename(file.filename, path.extname(file.filename));
   const imageUrl = `/api/static/uploads/${file.filename}`;
 
   const { device = "", language = "", screen = "", referer = "", network = "" } = req.body;
@@ -60,13 +59,11 @@ router.post("/diagnose", upload.single("image"), async (req, res) => {
   };
 
   try {
-    const anthropic = new Anthropic({
-      baseURL: process.env["AI_INTEGRATIONS_ANTHROPIC_BASE_URL"],
-      apiKey: process.env["AI_INTEGRATIONS_ANTHROPIC_API_KEY"],
-    });
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const imageData = fs.readFileSync(file.path);
     const b64 = imageData.toString("base64");
+    const mimeType = file.mimetype || "image/jpeg";
 
     const visionPrompt = `このTikTokのプロフィール画面のスクリーンショットから以下の情報をJSONで返してください。
 取得できない場合はnullとしてください。
@@ -83,16 +80,16 @@ router.post("/diagnose", upload.single("image"), async (req, res) => {
 
 JSONのみ返してください。マークダウンは不要です。`;
 
-    const visionRes = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
+    const visionRes = await openai.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 500,
       messages: [
         {
           role: "user",
           content: [
             {
-              type: "image",
-              source: { type: "base64", media_type: "image/jpeg", data: b64 },
+              type: "image_url",
+              image_url: { url: `data:${mimeType};base64,${b64}`, detail: "high" },
             },
             { type: "text", text: visionPrompt },
           ],
@@ -100,13 +97,11 @@ JSONのみ返してください。マークダウンは不要です。`;
       ],
     });
 
-    const textContent = visionRes.content[0];
-    if (textContent.type === "text") {
-      try {
-        tiktokData = JSON.parse(textContent.text);
-      } catch {
-        req.log.warn("Failed to parse vision API response as JSON");
-      }
+    const text = visionRes.choices[0]?.message?.content || "";
+    try {
+      tiktokData = JSON.parse(text);
+    } catch {
+      req.log.warn("Failed to parse OpenAI vision response as JSON");
     }
   } catch (err) {
     req.log.warn({ err }, "Vision API call failed, using defaults");
