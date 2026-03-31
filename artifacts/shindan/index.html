@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TikTokアカウント無料診断</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Sans+KR:wght@300;400;700;900&family=Noto+Sans+SC:wght@300;400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
   :root {
     --black: #0d0d0d;
@@ -473,6 +473,36 @@
   }
   .btn-copy:hover { background: var(--black); color: var(--white); }
 
+  /* ===== 言語切り替え ===== */
+  .lang-switcher {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 200;
+    display: flex;
+    gap: 3px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(6px);
+    border-radius: 6px;
+    padding: 3px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  }
+  .lang-btn {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 4px 7px;
+    cursor: pointer;
+    color: var(--gray3);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .lang-btn.active { background: var(--black); color: var(--white); }
+  .lang-btn:hover:not(.active) { background: rgba(0,0,0,0.08); }
+
   /* LINE CTA */
   .line-cta {
     background: var(--black);
@@ -706,6 +736,14 @@
 </head>
 <body>
 
+<!-- 言語切り替え -->
+<div class="lang-switcher" id="langSwitcher">
+  <button class="lang-btn active" id="langBtnJa" onclick="setLang('ja')">JA</button>
+  <button class="lang-btn" id="langBtnEn" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" id="langBtnKo" onclick="setLang('ko')">KO</button>
+  <button class="lang-btn" id="langBtnZh" onclick="setLang('zh')">ZH</button>
+</div>
+
 <!-- SCREEN 1 -->
 <div id="screen-upload">
 
@@ -718,10 +756,10 @@
   <div class="container">
     <div class="upload-layout">
       <div class="upload-col-left">
-        <div class="logo">無料診断</div>
+        <div class="logo" data-i18n="logoText">無料診断</div>
         <h1 class="page-title">TIKTOK<br>ACCOUNT</h1>
         <div class="divider"></div>
-        <p class="page-desc">TikTokのユーザー名を入力するだけ。<br>AIが30秒であなたのアカウントを<br>完全解析します。</p>
+        <p class="page-desc" data-i18n="pageDesc">TikTokのユーザー名を入力するだけ。<br>AIが30秒であなたのアカウントを<br>完全解析します。</p>
       </div>
       <div class="upload-col-right">
 
@@ -730,13 +768,13 @@
             <span class="username-at">@</span>
             <input type="text" id="usernameInput" placeholder="tiktok_username" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" oninput="onUsernameInput()" onkeydown="if(event.key==='Enter'&&!btnDiagnose.disabled)startDiagnosis()">
           </div>
-          <p class="username-hint">TikTokのユーザー名を入力するだけで自動解析します</p>
+          <p class="username-hint" data-i18n="inputHint">TikTokのユーザー名を入力するだけで自動解析します</p>
         </div>
 
-        <button class="btn-main" id="btnDiagnose" disabled onclick="startDiagnosis()">
+        <button class="btn-main" id="btnDiagnose" disabled onclick="startDiagnosis()" data-i18n="btnDiagnose">
           今すぐ無料診断する
         </button>
-        <p class="hint">完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒</p>
+        <p class="hint" data-i18n="freeHint">完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒</p>
       </div>
     </div>
   </div>
@@ -745,11 +783,11 @@
 <!-- SCREEN 2 -->
 <div id="screen-loading">
   <div class="container" style="width:100%;text-align:center;padding:40px 24px;">
-    <div class="loading-label">解析中</div>
+    <div class="loading-label" data-i18n="loadingLabel">解析中</div>
     <div class="loading-bar-wrap">
       <div class="loading-bar-fill" id="loadingBar"></div>
     </div>
-    <div class="loading-step-text" id="loadingStepText">アカウントを取得中</div>
+    <div class="loading-step-text" id="loadingStepText"></div>
   </div>
 </div>
 
@@ -778,7 +816,7 @@
           <div class="card-rank-wrap">
             <div class="rank-badge" id="rankBadge">S</div>
             <div class="rank-label-wrap">
-              <div class="rank-label">診断ランク</div>
+              <div class="rank-label" data-i18n="rankLabel">診断ランク</div>
               <div class="rank-title" id="rankTitle">—</div>
             </div>
           </div>
@@ -788,7 +826,7 @@
           <div class="card-scores" id="cardScores"></div>
 
           <div class="card-total">
-            <div class="card-total-label">総合スコア</div>
+            <div class="card-total-label" data-i18n="totalLabel">総合スコア</div>
             <div class="card-total-num" id="totalNum">0</div>
             <div class="card-total-max">/ 100</div>
           </div>
@@ -803,21 +841,21 @@
 
         <!-- スクショ案内 -->
         <div class="screenshot-guide fade-in d3">
-          <div class="screenshot-guide-title">この診断結果をスクショしてTikTokに投稿しよう</div>
+          <div class="screenshot-guide-title" data-i18n="screenshotTitle">この診断結果をスクショしてTikTokに投稿しよう</div>
         </div>
 
-        <button class="btn-copy fade-in d4" onclick="saveResult()">
+        <button class="btn-copy fade-in d4" onclick="saveResult()" data-i18n="saveBtnLabel">
           診断結果を保存する
         </button>
 
         <!-- LINE CTA -->
         <div class="line-cta fade-in d5">
-          <div class="line-cta-badge">AI解析完了</div>
-          <div class="line-cta-title">詳しい診断結果をLINEで無料お届け</div>
-          <div class="line-cta-desc">AIが発見したあなたのアカウント影響力を詳しく解説します。</div>
+          <div class="line-cta-badge" data-i18n="lineCtaBadge">AI解析完了</div>
+          <div class="line-cta-title" data-i18n="lineCtaTitle">詳しい診断結果をLINEで無料お届け</div>
+          <div class="line-cta-desc" data-i18n="lineCtaDesc">AIが発見したあなたのアカウント影響力を詳しく解説します。</div>
           <a href="#" class="btn-line" id="btnLine" onclick="trackLine()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.04 2 11.04c0 3.44 2.04 6.46 5.08 8.24l-.6 2.24c-.08.3.24.56.5.4l2.64-1.58c.74.1 1.5.16 2.28.16 5.52 0 10-4.04 10-9.04C22 6.04 17.52 2 12 2z"/></svg>
-            LINEで詳細を受け取る（無料）
+            <span data-i18n="lineBtnText">LINEで詳細を受け取る（無料）</span>
           </a>
         </div>
       </div>
@@ -831,6 +869,137 @@
 <script>
   const LINE_URL = 'https://lin.ee/8j8NWHn';
   document.getElementById('btnLine').href = LINE_URL;
+
+  // ===== i18n 多言語辞書 =====
+  const LANGS = {
+    ja: {
+      logoText: '無料診断',
+      pageDesc: 'TikTokのユーザー名を入力するだけ。<br>AIが30秒であなたのアカウントを<br>完全解析します。',
+      inputHint: 'TikTokのユーザー名を入力するだけで自動解析します',
+      btnDiagnose: '今すぐ無料診断する',
+      freeHint: '完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒',
+      loadingLabel: '解析中',
+      loadingSteps: ['TikTokのデータを引っ張ってます', 'フォロワーを数えてます', 'エンゲージメントを解剖中', 'AIがガチ分析してます', '診断結果まとめてます'],
+      rankLabel: '診断ランク',
+      dateLabel: '診断',
+      totalLabel: '総合スコア',
+      scores: { buzzPotential: 'バズポテンシャル', engagementScore: 'エンゲージメント率', profileScore: 'プロフィール訴求力', consistencyScore: 'コンテンツの一貫性', monetizationScore: '収益化の準備度' },
+      diagPreviewHeader: 'AI 診断プレビュー',
+      goodLabel: '✓ 強み',
+      badLabel: '△ 改善ポイント',
+      lockText: '残りの詳細はLINEで受け取る →',
+      screenshotTitle: 'この診断結果をスクショしてTikTokに投稿しよう',
+      saveBtnLabel: '診断結果を保存する',
+      lineCtaBadge: 'AI解析完了',
+      lineCtaTitle: '詳しい診断結果をLINEで無料お届け',
+      lineCtaDesc: 'AIが発見したあなたのアカウント影響力を詳しく解説します。',
+      lineBtnText: 'LINEで詳細を受け取る（無料）',
+      rankTitles: { GOD: '完全にバズる人間', S: '止まれない怪物', A: '爆発まで秒読み', B: 'まだ本気出してない', C: '伸びしろしか見えない' },
+      errNotFound: 'ユーザーが見つかりませんでした',
+    },
+    en: {
+      logoText: 'FREE ANALYSIS',
+      pageDesc: 'Just enter your TikTok username.<br>AI fully analyzes your account<br>in 30 seconds.',
+      inputHint: 'Enter your TikTok username for auto-analysis',
+      btnDiagnose: 'Diagnose for Free Now',
+      freeHint: 'Completely Free &nbsp;/&nbsp; No Sign-up &nbsp;/&nbsp; ~30 sec',
+      loadingLabel: 'Analyzing',
+      loadingSteps: ['Fetching TikTok data...', 'Counting followers...', 'Analyzing engagement...', 'AI deep analysis in progress...', 'Generating your results...'],
+      rankLabel: 'RANK',
+      dateLabel: 'Report',
+      totalLabel: 'Total Score',
+      scores: { buzzPotential: 'Buzz Potential', engagementScore: 'Engagement Rate', profileScore: 'Profile Appeal', consistencyScore: 'Consistency', monetizationScore: 'Monetization' },
+      diagPreviewHeader: 'AI Diagnosis Preview',
+      goodLabel: '✓ Strength',
+      badLabel: '△ Improvement',
+      lockText: 'Get full details via LINE →',
+      screenshotTitle: 'Screenshot this & post to TikTok!',
+      saveBtnLabel: 'Save Result',
+      lineCtaBadge: 'AI Analysis Complete',
+      lineCtaTitle: 'Get Detailed Report via LINE — Free',
+      lineCtaDesc: 'AI will explain your account\'s full influence in detail.',
+      lineBtnText: 'Get Details via LINE (Free)',
+      rankTitles: { GOD: 'Born to Break the Internet', S: 'Unstoppable Monster', A: 'Seconds to Explode', B: "Haven't Gone Full Power", C: 'Pure Potential Ahead' },
+      errNotFound: 'User not found',
+    },
+    ko: {
+      logoText: '무료 진단',
+      pageDesc: 'TikTok 사용자 이름만 입력하세요.<br>AI가 30초 만에 계정을<br>완전 분석합니다.',
+      inputHint: 'TikTok 사용자 이름으로 자동 분석',
+      btnDiagnose: '지금 무료 진단하기',
+      freeHint: '완전 무료 &nbsp;/&nbsp; 가입 불필요 &nbsp;/&nbsp; 약 30초',
+      loadingLabel: '분석 중',
+      loadingSteps: ['TikTok 데이터 불러오는 중...', '팔로워 수 확인 중...', '참여율 분석 중...', 'AI 심층 분석 중...', '결과 생성 중...'],
+      rankLabel: '진단 랭크',
+      dateLabel: '진단',
+      totalLabel: '종합 점수',
+      scores: { buzzPotential: '버즈 포텐셜', engagementScore: '참여율', profileScore: '프로필 어필', consistencyScore: '일관성', monetizationScore: '수익화 준비' },
+      diagPreviewHeader: 'AI 진단 미리보기',
+      goodLabel: '✓ 강점',
+      badLabel: '△ 개선점',
+      lockText: 'LINE에서 자세한 내용 받기 →',
+      screenshotTitle: '이 진단 결과를 스크린샷해서 TikTok에 올리세요!',
+      saveBtnLabel: '결과 저장하기',
+      lineCtaBadge: 'AI 분석 완료',
+      lineCtaTitle: 'LINE에서 상세 진단 결과를 무료로 받아보세요',
+      lineCtaDesc: 'AI가 발견한 계정 영향력을 자세히 설명해 드립니다.',
+      lineBtnText: 'LINE에서 자세히 받기（무료）',
+      rankTitles: { GOD: '인터넷을 부수는 인간', S: '멈출 수 없는 괴물', A: '폭발까지 초읽기', B: '아직 진심 안 냈어', C: '성장 가능성만 보인다' },
+      errNotFound: '사용자를 찾을 수 없습니다',
+    },
+    zh: {
+      logoText: '免费诊断',
+      pageDesc: '只需输入您的TikTok用户名。<br>AI在30秒内完全分析<br>您的账号。',
+      inputHint: '输入TikTok用户名即可自动分析',
+      btnDiagnose: '立即免费诊断',
+      freeHint: '完全免费 &nbsp;/&nbsp; 无需注册 &nbsp;/&nbsp; 约30秒',
+      loadingLabel: '分析中',
+      loadingSteps: ['正在获取TikTok数据...', '正在统计粉丝数...', '正在分析互动率...', 'AI深度分析中...', '正在生成诊断结果...'],
+      rankLabel: '诊断等级',
+      dateLabel: '诊断',
+      totalLabel: '综合评分',
+      scores: { buzzPotential: '爆款潜力', engagementScore: '互动率', profileScore: '主页吸引力', consistencyScore: '稳定性', monetizationScore: '变现准备' },
+      diagPreviewHeader: 'AI诊断预览',
+      goodLabel: '✓ 优势',
+      badLabel: '△ 改善点',
+      lockText: '在LINE上获取完整详情 →',
+      screenshotTitle: '截图这个结果发到TikTok吧！',
+      saveBtnLabel: '保存诊断结果',
+      lineCtaBadge: 'AI分析完成',
+      lineCtaTitle: '通过LINE免费获取详细诊断报告',
+      lineCtaDesc: 'AI将详细解析您账号的全部影响力。',
+      lineBtnText: '通过LINE获取详情（免费）',
+      rankTitles: { GOD: '天生病毒式传播', S: '停不下来的怪物', A: '引爆倒计时', B: '还没认真起来', C: '只看到成长空间' },
+      errNotFound: '未找到用户',
+    },
+  };
+
+  let currentLang = localStorage.getItem('lang') || 'ja';
+
+  function t(key) {
+    return (LANGS[currentLang] || LANGS.ja)[key];
+  }
+
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    // ボタンのactive更新
+    ['ja','en','ko','zh'].forEach(l => {
+      const btn = document.getElementById('langBtn' + l.charAt(0).toUpperCase() + l.slice(1));
+      if (btn) btn.classList.toggle('active', l === lang);
+    });
+    // data-i18n要素を一括更新
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      const val = LANGS[lang][key];
+      if (val !== undefined) el.innerHTML = val;
+    });
+    // html lang属性を更新
+    document.documentElement.lang = lang;
+  }
+
+  // ページ読み込み時に言語を適用
+  setLang(currentLang);
 
   const btnDiagnose = document.getElementById('btnDiagnose');
   let captionText = '';
@@ -851,13 +1020,7 @@
     btnDiagnose.disabled = val.length < 1;
   }
 
-  const loadingSteps = [
-    'TikTokのデータを引っ張ってます',
-    'フォロワーを数えてます',
-    'エンゲージメントを解剖中',
-    'AIがガチ分析してます',
-    '診断結果まとめてます',
-  ];
+  // loadingSteps は i18n から動的取得
 
   let currentUserId = null;
   let dwellStart = Date.now();
@@ -868,8 +1031,10 @@
 
     const bar = document.getElementById('loadingBar');
     const stepText = document.getElementById('loadingStepText');
+    const loadingSteps = t('loadingSteps');
     let progress = 0;
     let stepIdx = 0;
+    stepText.textContent = loadingSteps[0];
 
     const iv = setInterval(() => {
       progress = Math.min(progress + 1, 88);
@@ -893,7 +1058,7 @@
     fetch('/api/diagnose-by-username', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, ...commonParams }),
+      body: JSON.stringify({ username, lang: currentLang, ...commonParams }),
     })
       .then(r => {
         if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'エラー'); });
@@ -908,7 +1073,7 @@
       .catch(err => {
         clearInterval(iv);
         bar.style.width = '100%';
-        showToast(err.message || 'ユーザーが見つかりませんでした');
+        showToast(err.message || t('errNotFound'));
         document.getElementById('screen-loading').style.display = 'none';
         document.getElementById('screen-upload').style.display = 'flex';
       });
@@ -1051,7 +1216,7 @@
 
   function getTodayString() {
     const d = new Date();
-    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 診断`;
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${t('dateLabel')}`;
   }
 
   function showResult(r) {
@@ -1085,22 +1250,28 @@
     // ランク
     const rankBadge = document.getElementById('rankBadge');
     rankBadge.textContent = r.rank;
-    rankBadge.className = 'rank-badge ' + r.rankClass;
-    document.getElementById('rankTitle').textContent = r.title;
+    const rc = r.rankClass || ('rank-' + (r.rank || 'c').toLowerCase());
+    rankBadge.className = 'rank-badge ' + rc;
+    const titleText = r.title || (t('rankTitles') || {})[r.rank] || r.rank;
+    document.getElementById('rankTitle').textContent = titleText;
     document.getElementById('cardDesc').textContent = r.desc;
 
     // スコア
     const scoresEl = document.getElementById('cardScores');
-    scoresEl.innerHTML = r.scores.map(s => `
+    const scoreNames = t('scores') || {};
+    scoresEl.innerHTML = r.scores.map(s => {
+      const displayName = s.key ? (scoreNames[s.key] || s.key) : (s.name || '');
+      return `
       <div class="card-score-item">
         <div class="card-score-row">
-          <span class="card-score-name">${s.name}</span>
+          <span class="card-score-name">${displayName}</span>
           <span class="card-score-val">${s.val}</span>
         </div>
         <div class="card-score-bar">
           <div class="card-score-fill" data-val="${s.val}"></div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
     // 診断プレビュー
     const previewEl = document.getElementById('diagPreview');
@@ -1108,17 +1279,17 @@
       const good = r.goods && r.goods[0] ? r.goods[0] : null;
       const bad = r.bads && r.bads[0] ? r.bads[0] : null;
       previewEl.innerHTML = `
-        <div class="diag-preview-header">AI 診断プレビュー</div>
+        <div class="diag-preview-header">${t('diagPreviewHeader')}</div>
         ${good ? `<div class="diag-preview-item good">
-          <span class="diag-preview-label">✓ 強み</span>
+          <span class="diag-preview-label">${t('goodLabel')}</span>
           <p>${good}</p>
         </div>` : ''}
         ${bad ? `<div class="diag-preview-item bad">
-          <span class="diag-preview-label">△ 改善ポイント</span>
+          <span class="diag-preview-label">${t('badLabel')}</span>
           <p>${bad}</p>
         </div>` : ''}
         <div class="diag-preview-lock">
-          <div class="diag-preview-lock-text">残りの詳細はLINEで受け取る →</div>
+          <div class="diag-preview-lock-text">${t('lockText')}</div>
         </div>`;
     }
 
@@ -1211,18 +1382,22 @@
 
   // ===== USER SLIDER =====
   const demoUsers = [
-    { tiktok_username: '@yuki_dance', rank: 'S',   emoji: '🦊' },
-    { tiktok_username: '@tokyo_fit',  rank: 'A',   emoji: '🐼' },
-    { tiktok_username: '@haruto99',   rank: 'GOD', emoji: '👻' },
-    { tiktok_username: '@osaka_life', rank: 'B',   emoji: '🐯' },
-    { tiktok_username: '@mika_vlogs', rank: 'A',   emoji: '🦁' },
-    { tiktok_username: '@kenta_2024', rank: 'S',   emoji: '🤖' },
-    { tiktok_username: '@rina_cook',  rank: 'B',   emoji: '🐸' },
-    { tiktok_username: '@shibuya_vl', rank: 'C',   emoji: '🐶' },
-    { tiktok_username: '@nano_music', rank: 'A',   emoji: '🐱' },
-    { tiktok_username: '@ryu_gym',    rank: 'S',   emoji: '🦋' },
-    { tiktok_username: '@sora_art',   rank: 'GOD', emoji: '🌟' },
-    { tiktok_username: '@mai_beauty', rank: 'B',   emoji: '🐰' },
+    { tiktok_username: '@yuki_dance',  rank: 'B' },
+    { tiktok_username: '@tokyo_fit',   rank: 'C' },
+    { tiktok_username: '@haruto99',    rank: 'B' },
+    { tiktok_username: '@osaka_vlog',  rank: 'C' },
+    { tiktok_username: '@mika_recipe', rank: 'A' },
+    { tiktok_username: '@kenta_2024',  rank: 'B' },
+    { tiktok_username: '@rina_cook',   rank: 'C' },
+    { tiktok_username: '@shibuya_tv',  rank: 'C' },
+    { tiktok_username: '@nano_music',  rank: 'B' },
+    { tiktok_username: '@ryu_fitness', rank: 'A' },
+    { tiktok_username: '@sora_art',    rank: 'S' },
+    { tiktok_username: '@mai_beauty',  rank: 'C' },
+    { tiktok_username: '@takeshi_jp',  rank: 'B' },
+    { tiktok_username: '@hana_life',   rank: 'C' },
+    { tiktok_username: '@kenji_vlog',  rank: 'C' },
+    { tiktok_username: '@ayaka_style', rank: 'B' },
   ];
 
   function buildChip(user) {

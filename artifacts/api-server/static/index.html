@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TikTokアカウント無料診断</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&family=Noto+Sans+KR:wght@300;400;700;900&family=Noto+Sans+SC:wght@300;400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
   :root {
     --black: #0d0d0d;
@@ -31,7 +31,7 @@
     padding: 52px 0 60px;
   }
   .logo {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.35em;
     color: var(--gray4);
@@ -62,50 +62,62 @@
     margin-bottom: 44px;
     font-weight: 300;
   }
-  .upload-zone {
-    border: 1.5px dashed var(--gray5);
-    border-radius: 6px;
-    padding: 44px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+  /* ===== RESPONSIVE ===== */
+  @media (min-width: 700px) {
+    .container { max-width: 720px; padding: 0 40px; }
+
+    #screen-upload { padding: 64px 0 80px; }
+
+    /* 2カラムレイアウト（テキスト左、アップロード右） */
+    .upload-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .page-title { font-size: 72px; }
+    .page-desc { margin-bottom: 0; }
+    .logo { margin-bottom: 40px; }
+
+    /* 結果画面 */
+    #screen-result { padding: 64px 0 100px; }
+    #result-card { padding: 44px 40px 36px; }
+    .rank-badge { font-size: 100px; }
+    .rank-title { font-size: 28px; }
   }
-  .upload-zone:hover, .upload-zone.dragover {
-    border-color: var(--black);
-    border-style: solid;
-    background: rgba(0,0,0,0.02);
+
+  @media (min-width: 960px) {
+    .container { max-width: 960px; padding: 0 60px; }
+    .upload-layout { gap: 100px; grid-template-columns: 1.1fr 0.9fr; }
+    .page-title { font-size: 100px; }
+
+    /* 結果画面2カラム */
+    .result-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+    .result-col-left { }
+    .result-col-right { }
   }
-  .upload-label {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--black);
-    margin-bottom: 10px;
-    letter-spacing: 0.05em;
-  }
-  .upload-sub {
-    font-size: 12px;
-    color: var(--gray4);
-    line-height: 1.8;
-    font-weight: 300;
-  }
-  #fileInput { display: none; }
-  .preview-wrap { display: none; margin-top: 14px; position: relative; }
-  .preview-wrap img {
-    width: 100%;
-    border-radius: 6px;
-    display: block;
-    border: 1px solid var(--gray5);
-  }
-  .preview-tag {
-    position: absolute;
-    top: 10px; right: 10px;
-    background: var(--black);
-    color: var(--white);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    padding: 4px 10px;
-    border-radius: 2px;
+
+  @media (min-width: 1280px) {
+    .container { max-width: 1200px; padding: 0 80px; }
+    .upload-layout { gap: 140px; }
+    .page-title { font-size: 120px; }
+    #screen-upload { padding-top: 0; padding-bottom: 0; }
+    #screen-upload > .container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding-top: 60px;
+      padding-bottom: 80px;
+    }
+    #screen-upload > .container > .upload-layout {
+      width: 100%;
+    }
   }
   .btn-main {
     display: block;
@@ -348,58 +360,100 @@
     font-weight: 300;
   }
 
-  /* 分析 */
-  .analysis-wrap {
+  /* ===== 保存用ライトモード（html2canvas用） ===== */
+  #result-card.snapshot-light {
+    background: #ffffff !important;
+    color: #0d0d0d !important;
+  }
+  #result-card.snapshot-light .card-username { color: #0d0d0d !important; }
+  #result-card.snapshot-light .card-date { color: #999 !important; }
+  #result-card.snapshot-light .card-brand { color: #ccc !important; }
+  #result-card.snapshot-light .card-user { border-bottom-color: #ebebeb !important; }
+  #result-card.snapshot-light .card-avatar { border-color: #e0e0e0 !important; background: #f0f0f0 !important; }
+  #result-card.snapshot-light .rank-badge { color: #0d0d0d !important; }
+  #result-card.snapshot-light .rank-badge.rank-s { color: #b8860b !important; }
+  #result-card.snapshot-light .rank-badge.rank-a { color: #333 !important; }
+  #result-card.snapshot-light .rank-badge.rank-b { color: #7a5c2e !important; }
+  #result-card.snapshot-light .rank-badge.rank-c { color: #666 !important; }
+  #result-card.snapshot-light .rank-label { color: #bbb !important; }
+  #result-card.snapshot-light .rank-title { color: #0d0d0d !important; }
+  #result-card.snapshot-light .card-desc {
+    color: #555 !important;
+    border-bottom-color: #ebebeb !important;
+  }
+  #result-card.snapshot-light .card-score-name { color: #999 !important; }
+  #result-card.snapshot-light .card-score-val { color: #333 !important; }
+  #result-card.snapshot-light .card-score-bar { background: #ebebeb !important; }
+  #result-card.snapshot-light .card-score-fill { background: #0d0d0d !important; }
+  #result-card.snapshot-light .card-total { border-top-color: #ebebeb !important; }
+  #result-card.snapshot-light .card-total-label { color: #ccc !important; }
+  #result-card.snapshot-light .card-total-num { color: #0d0d0d !important; }
+  #result-card.snapshot-light .card-total-max { color: #bbb !important; }
+
+  /* 診断プレビュー */
+  .diag-preview {
     border: 1px solid var(--gray5);
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 20px;
-  }
-  .analysis-row {
-    padding: 18px 22px;
-    border-bottom: 1px solid var(--gray5);
-  }
-  .analysis-row:last-child { border-bottom: none; }
-  .analysis-row-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--gray4);
     margin-bottom: 12px;
   }
-  .analysis-item {
-    font-size: 13px;
-    color: var(--black);
-    line-height: 1.8;
-    font-weight: 300;
-    padding: 7px 0;
-    border-bottom: 1px solid #f0f0f0;
+  .diag-preview-header {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gray3);
+    padding: 14px 18px 10px;
   }
-  .analysis-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .analysis-item:first-child { padding-top: 0; }
+  .diag-preview-item {
+    padding: 12px 18px;
+    border-top: 1px solid var(--gray5);
+  }
+  .diag-preview-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 5px;
+    display: block;
+  }
+  .diag-preview-item.good .diag-preview-label { color: #06c755; }
+  .diag-preview-item.bad .diag-preview-label { color: #e04; }
+  .diag-preview-item p {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--black);
+    font-weight: 300;
+    margin: 0;
+  }
+  .diag-preview-lock {
+    padding: 14px 18px;
+    border-top: 1px solid var(--gray5);
+    background: #f9f9f9;
+    text-align: center;
+  }
+  .diag-preview-lock-text {
+    font-size: 11px;
+    color: var(--gray3);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
 
   /* スクショ案内 */
   .screenshot-guide {
     background: var(--black);
     color: var(--white);
     border-radius: 6px;
-    padding: 16px 22px;
-    margin-bottom: 10px;
+    padding: 14px 20px;
+    margin-top: 12px;
     text-align: center;
   }
   .screenshot-guide-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.03em;
-    margin-bottom: 4px;
   }
-  .screenshot-guide-sub {
-    font-size: 11px;
-    color: rgba(255,255,255,0.4);
-    font-weight: 300;
-    line-height: 1.6;
-  }
+
   .btn-copy {
     display: block;
     width: 100%;
@@ -414,30 +468,85 @@
     font-family: 'Noto Sans JP', sans-serif;
     cursor: pointer;
     transition: all 0.2s;
-    margin-bottom: 20px;
+    margin-bottom: 0;
+    margin-top: 12px;
   }
   .btn-copy:hover { background: var(--black); color: var(--white); }
 
-  /* LINE */
-  .line-cta {
-    border: 1px solid var(--gray5);
+  /* ===== 言語切り替え ===== */
+  .lang-switcher {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 200;
+    display: flex;
+    gap: 3px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(6px);
     border-radius: 6px;
-    padding: 22px;
+    padding: 3px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  }
+  .lang-btn {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 4px 7px;
+    cursor: pointer;
+    color: var(--gray3);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .lang-btn.active { background: var(--black); color: var(--white); }
+  .lang-btn:hover:not(.active) { background: rgba(0,0,0,0.08); }
+
+  /* LINE CTA */
+  .line-cta {
+    background: var(--black);
+    color: var(--white);
+    border-radius: 10px;
+    padding: 28px 24px 24px;
+    margin-top: 12px;
+    margin-bottom: 0;
+  }
+  .line-cta-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #06c755;
+    border: 1px solid #06c755;
+    border-radius: 3px;
+    padding: 3px 8px;
+    margin-bottom: 16px;
   }
   .line-cta-title {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 6px;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.4;
+    margin-bottom: 14px;
+    letter-spacing: 0.02em;
   }
-  .line-cta-sub {
+  .line-cta-desc {
     font-size: 12px;
-    color: var(--gray3);
-    line-height: 1.8;
-    margin-bottom: 18px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.9;
+    margin-bottom: 22px;
     font-weight: 300;
   }
+  .line-cta-desc strong {
+    color: rgba(255,255,255,0.9);
+    font-weight: 700;
+  }
   .btn-line {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
     padding: 16px;
     background: #06c755;
@@ -452,8 +561,59 @@
     text-align: center;
     text-decoration: none;
     transition: background 0.2s;
+    margin-bottom: 12px;
   }
   .btn-line:hover { background: #05b34c; }
+  .line-cta-note {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
+
+  /* ユーザー名入力 */
+  .username-input-wrap {
+    margin-bottom: 0;
+  }
+  .username-field {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--gray5);
+    border-radius: 6px;
+    padding: 14px 16px;
+    gap: 8px;
+    transition: border-color 0.2s;
+    background: #fff;
+  }
+  .username-field:focus-within {
+    border-color: var(--black);
+  }
+  .username-at {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray4);
+    flex-shrink: 0;
+  }
+  .username-field input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--black);
+    background: transparent;
+    min-width: 0;
+  }
+  .username-field input::placeholder { color: var(--gray5); }
+  .username-hint {
+    font-size: 11px;
+    color: var(--gray4);
+    margin-top: 8px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+  }
 
   .toast {
     position: fixed;
@@ -479,148 +639,388 @@
   .d3 { animation-delay: 0.25s; }
   .d4 { animation-delay: 0.35s; }
   .d5 { animation-delay: 0.45s; }
+
+  /* ===== USER SLIDER ===== */
+  .user-slider-section {
+    width: 100%;
+    overflow: hidden;
+    padding: 20px 0 32px;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  .slider-row {
+    display: flex;
+    gap: 10px;
+    animation: slide-left 52s linear infinite;
+    width: max-content;
+  }
+  .slider-row:nth-child(2) {
+    animation-direction: reverse;
+    animation-duration: 66s;
+    margin-top: 10px;
+  }
+  @keyframes slide-left {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-33.333%); }
+  }
+  .slider-row:hover { animation-play-state: paused; }
+
+  /* ピル型チップ */
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 100px;
+    padding: 6px 12px 6px 6px;
+    transition: border-color 0.2s;
+  }
+  .user-chip:hover { border-color: #bbb; }
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.03em;
+    overflow: hidden;
+    flex-shrink: 0;
+    color: #fff;
+    position: relative;
+  }
+  .user-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  .user-avatar.av-god { background: #111; }
+  .user-avatar.av-s   { background: #b8860b; }
+  .user-avatar.av-a   { background: #555; }
+  .user-avatar.av-b   { background: #7a5c2e; }
+  .user-avatar.av-c   { background: #999; }
+  .user-name {
+    font-size: 11px;
+    color: #444;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rank-pill {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+  .rank-pill.god { background: #111; color: #fff; }
+  .rank-pill.s   { background: #b8860b; color: #ffd700; }
+  .rank-pill.a   { background: #444; color: #e8e8e8; }
+  .rank-pill.b   { background: #7a5c2e; color: #d4aa70; }
+  .rank-pill.c   { background: #888; color: #ddd; }
 </style>
 </head>
 <body>
 
+<!-- 言語切り替え -->
+<div class="lang-switcher" id="langSwitcher">
+  <button class="lang-btn active" id="langBtnJa" onclick="setLang('ja')">JA</button>
+  <button class="lang-btn" id="langBtnEn" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" id="langBtnKo" onclick="setLang('ko')">KO</button>
+  <button class="lang-btn" id="langBtnZh" onclick="setLang('zh')">ZH</button>
+</div>
+
 <!-- SCREEN 1 -->
 <div id="screen-upload">
+
+  <!-- ユーザースライダー -->
+  <div class="user-slider-section" id="userSliderSection">
+    <div class="slider-row" id="sliderRow1"></div>
+    <div class="slider-row" id="sliderRow2"></div>
+  </div>
+
   <div class="container">
-    <div class="logo">無料診断</div>
-    <h1 class="page-title">TIKTOK<br>ACCOUNT</h1>
-    <div class="divider"></div>
-    <p class="page-desc">プロフィール画面のスクリーンショットを<br>アップロードするだけ。AIが30秒で<br>あなたのTikTokを完全解析します。</p>
+    <div class="upload-layout">
+      <div class="upload-col-left">
+        <div class="logo" data-i18n="logoText">無料診断</div>
+        <h1 class="page-title">TIKTOK<br>ACCOUNT</h1>
+        <div class="divider"></div>
+        <p class="page-desc" data-i18n="pageDesc">TikTokのユーザー名を入力するだけ。<br>AIが30秒であなたのアカウントを<br>完全解析します。</p>
+      </div>
+      <div class="upload-col-right">
 
-    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <div class="upload-label">スクショをアップロード</div>
-      <div class="upload-sub">TikTokのプロフィール画面<br>（フォロワー数・いいね数が見えるもの）</div>
-      <input type="file" id="fileInput" accept="image/*">
+        <div class="username-input-wrap">
+          <div class="username-field">
+            <span class="username-at">@</span>
+            <input type="text" id="usernameInput" placeholder="tiktok_username" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" oninput="onUsernameInput()" onkeydown="if(event.key==='Enter'&&!btnDiagnose.disabled)startDiagnosis()">
+          </div>
+          <p class="username-hint" data-i18n="inputHint">TikTokのユーザー名を入力するだけで自動解析します</p>
+        </div>
+
+        <button class="btn-main" id="btnDiagnose" disabled onclick="startDiagnosis()" data-i18n="btnDiagnose">
+          今すぐ無料診断する
+        </button>
+        <p class="hint" data-i18n="freeHint">完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒</p>
+      </div>
     </div>
-
-    <div class="preview-wrap" id="previewWrap">
-      <img id="previewImg" src="" alt="">
-      <div class="preview-tag">選択済み</div>
-    </div>
-
-    <button class="btn-main" id="btnDiagnose" disabled onclick="startDiagnosis()">
-      今すぐ無料診断する
-    </button>
-    <p class="hint">完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒</p>
   </div>
 </div>
 
 <!-- SCREEN 2 -->
 <div id="screen-loading">
   <div class="container" style="width:100%;text-align:center;padding:40px 24px;">
-    <div class="loading-label">解析中</div>
+    <div class="loading-label" data-i18n="loadingLabel">解析中</div>
     <div class="loading-bar-wrap">
       <div class="loading-bar-fill" id="loadingBar"></div>
     </div>
-    <div class="loading-step-text" id="loadingStepText">画像を読み込み中</div>
+    <div class="loading-step-text" id="loadingStepText"></div>
   </div>
 </div>
 
 <!-- SCREEN 3 -->
 <div id="screen-result">
   <div class="container">
+    <div class="result-layout">
 
-    <!-- 結果カード（スクショ対象） -->
-    <div id="result-card" class="fade-in d1">
-      <!-- ユーザー情報 -->
-      <div class="card-user">
-        <div class="card-avatar" id="cardAvatar">
-          <img id="cardAvatarImg" src="" alt="" style="display:none;">
-          <span id="cardAvatarEmoji"></span>
+      <!-- 左カラム：結果カード + LINE CTA -->
+      <div class="result-col-left">
+        <div id="result-card" class="fade-in d1">
+          <!-- ユーザー情報 -->
+          <div class="card-user">
+            <div class="card-avatar" id="cardAvatar">
+              <img id="cardAvatarImg" src="" alt="" style="display:none;">
+              <span id="cardAvatarEmoji"></span>
+            </div>
+            <div class="card-user-info">
+              <div class="card-username" id="cardUsername">@username</div>
+              <div class="card-date" id="cardDate"></div>
+            </div>
+            <div class="card-brand"></div>
+          </div>
+
+          <!-- ランク -->
+          <div class="card-rank-wrap">
+            <div class="rank-badge" id="rankBadge">S</div>
+            <div class="rank-label-wrap">
+              <div class="rank-label" data-i18n="rankLabel">診断ランク</div>
+              <div class="rank-title" id="rankTitle">—</div>
+            </div>
+          </div>
+
+          <div class="card-desc" id="cardDesc">—</div>
+
+          <div class="card-scores" id="cardScores"></div>
+
+          <div class="card-total">
+            <div class="card-total-label" data-i18n="totalLabel">総合スコア</div>
+            <div class="card-total-num" id="totalNum">0</div>
+            <div class="card-total-max">/ 100</div>
+          </div>
         </div>
-        <div class="card-user-info">
-          <div class="card-username" id="cardUsername">@username</div>
-          <div class="card-date" id="cardDate"></div>
-        </div>
-        <div class="card-brand"></div>
+
       </div>
 
-      <!-- ランク -->
-      <div class="card-rank-wrap">
-        <div class="rank-badge" id="rankBadge">S</div>
-        <div class="rank-label-wrap">
-          <div class="rank-label">診断ランク</div>
-          <div class="rank-title" id="rankTitle">—</div>
+      <!-- 右カラム：診断プレビュー + アクション -->
+      <div class="result-col-right">
+        <!-- 診断プレビュー -->
+        <div class="diag-preview fade-in d2" id="diagPreview"></div>
+
+        <!-- スクショ案内 -->
+        <div class="screenshot-guide fade-in d3">
+          <div class="screenshot-guide-title" data-i18n="screenshotTitle">この診断結果をスクショしてTikTokに投稿しよう</div>
+        </div>
+
+        <button class="btn-copy fade-in d4" onclick="saveResult()" data-i18n="saveBtnLabel">
+          診断結果を保存する
+        </button>
+
+        <!-- LINE CTA -->
+        <div class="line-cta fade-in d5">
+          <div class="line-cta-badge" data-i18n="lineCtaBadge">AI解析完了</div>
+          <div class="line-cta-title" data-i18n="lineCtaTitle">詳しい診断結果をLINEで無料お届け</div>
+          <div class="line-cta-desc" data-i18n="lineCtaDesc">AIが発見したあなたのアカウント影響力を詳しく解説します。</div>
+          <a href="#" class="btn-line" id="btnLine" onclick="trackLine()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.04 2 11.04c0 3.44 2.04 6.46 5.08 8.24l-.6 2.24c-.08.3.24.56.5.4l2.64-1.58c.74.1 1.5.16 2.28.16 5.52 0 10-4.04 10-9.04C22 6.04 17.52 2 12 2z"/></svg>
+            <span data-i18n="lineBtnText">LINEで詳細を受け取る（無料）</span>
+          </a>
         </div>
       </div>
 
-      <div class="card-desc" id="cardDesc">—</div>
-
-      <div class="card-scores" id="cardScores"></div>
-
-      <div class="card-total">
-        <div class="card-total-label">総合スコア</div>
-        <div class="card-total-num" id="totalNum">0</div>
-        <div class="card-total-max">/ 100</div>
-      </div>
     </div>
-
-    <!-- 分析詳細 -->
-    <div class="analysis-wrap fade-in d2" id="analysisWrap"></div>
-
-    <!-- スクショ案内 -->
-    <div class="screenshot-guide fade-in d3">
-      <div class="screenshot-guide-title">この診断結果をスクショしてTikTokに投稿しよう</div>
-    </div>
-
-    <button class="btn-copy fade-in d4" onclick="saveResult()">
-      診断結果を保存する
-    </button>
-
-    <div class="line-cta fade-in d5">
-      <div class="line-cta-title">詳細レポートを無料で受け取る</div>
-      <a href="#" class="btn-line">LINEで受け取る（無料）</a>
-    </div>
-
   </div>
 </div>
 
 <div class="toast" id="toast">コピーしました</div>
 
 <script>
-  const fileInput = document.getElementById('fileInput');
-  const uploadZone = document.getElementById('uploadZone');
-  const previewWrap = document.getElementById('previewWrap');
-  const previewImg = document.getElementById('previewImg');
+  const LINE_URL = 'https://lin.ee/8j8NWHn';
+  document.getElementById('btnLine').href = LINE_URL;
+
+  // ===== i18n 多言語辞書 =====
+  const LANGS = {
+    ja: {
+      logoText: '無料診断',
+      pageDesc: 'TikTokのユーザー名を入力するだけ。<br>AIが30秒であなたのアカウントを<br>完全解析します。',
+      inputHint: 'TikTokのユーザー名を入力するだけで自動解析します',
+      btnDiagnose: '今すぐ無料診断する',
+      freeHint: '完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒',
+      loadingLabel: '解析中',
+      loadingSteps: ['TikTokのデータを引っ張ってます', 'フォロワーを数えてます', 'エンゲージメントを解剖中', 'AIがガチ分析してます', '診断結果まとめてます'],
+      rankLabel: '診断ランク',
+      dateLabel: '診断',
+      totalLabel: '総合スコア',
+      scores: { buzzPotential: 'バズポテンシャル', engagementScore: 'エンゲージメント率', profileScore: 'プロフィール訴求力', consistencyScore: 'コンテンツの一貫性', monetizationScore: '収益化の準備度' },
+      diagPreviewHeader: 'AI 診断プレビュー',
+      goodLabel: '✓ 強み',
+      badLabel: '△ 改善ポイント',
+      lockText: '残りの詳細はLINEで受け取る →',
+      screenshotTitle: 'この診断結果をスクショしてTikTokに投稿しよう',
+      saveBtnLabel: '診断結果を保存する',
+      lineCtaBadge: 'AI解析完了',
+      lineCtaTitle: '詳しい診断結果をLINEで無料お届け',
+      lineCtaDesc: 'AIが発見したあなたのアカウント影響力を詳しく解説します。',
+      lineBtnText: 'LINEで詳細を受け取る（無料）',
+      rankTitles: { GOD: '完全にバズる人間', S: '止まれない怪物', A: '爆発まで秒読み', B: 'まだ本気出してない', C: '伸びしろしか見えない' },
+      errNotFound: 'ユーザーが見つかりませんでした',
+    },
+    en: {
+      logoText: 'FREE ANALYSIS',
+      pageDesc: 'Just enter your TikTok username.<br>AI fully analyzes your account<br>in 30 seconds.',
+      inputHint: 'Enter your TikTok username for auto-analysis',
+      btnDiagnose: 'Diagnose for Free Now',
+      freeHint: 'Completely Free &nbsp;/&nbsp; No Sign-up &nbsp;/&nbsp; ~30 sec',
+      loadingLabel: 'Analyzing',
+      loadingSteps: ['Fetching TikTok data...', 'Counting followers...', 'Analyzing engagement...', 'AI deep analysis in progress...', 'Generating your results...'],
+      rankLabel: 'RANK',
+      dateLabel: 'Report',
+      totalLabel: 'Total Score',
+      scores: { buzzPotential: 'Buzz Potential', engagementScore: 'Engagement Rate', profileScore: 'Profile Appeal', consistencyScore: 'Consistency', monetizationScore: 'Monetization' },
+      diagPreviewHeader: 'AI Diagnosis Preview',
+      goodLabel: '✓ Strength',
+      badLabel: '△ Improvement',
+      lockText: 'Get full details via LINE →',
+      screenshotTitle: 'Screenshot this & post to TikTok!',
+      saveBtnLabel: 'Save Result',
+      lineCtaBadge: 'AI Analysis Complete',
+      lineCtaTitle: 'Get Detailed Report via LINE — Free',
+      lineCtaDesc: 'AI will explain your account\'s full influence in detail.',
+      lineBtnText: 'Get Details via LINE (Free)',
+      rankTitles: { GOD: 'Born to Break the Internet', S: 'Unstoppable Monster', A: 'Seconds to Explode', B: "Haven't Gone Full Power", C: 'Pure Potential Ahead' },
+      errNotFound: 'User not found',
+    },
+    ko: {
+      logoText: '무료 진단',
+      pageDesc: 'TikTok 사용자 이름만 입력하세요.<br>AI가 30초 만에 계정을<br>완전 분석합니다.',
+      inputHint: 'TikTok 사용자 이름으로 자동 분석',
+      btnDiagnose: '지금 무료 진단하기',
+      freeHint: '완전 무료 &nbsp;/&nbsp; 가입 불필요 &nbsp;/&nbsp; 약 30초',
+      loadingLabel: '분석 중',
+      loadingSteps: ['TikTok 데이터 불러오는 중...', '팔로워 수 확인 중...', '참여율 분석 중...', 'AI 심층 분석 중...', '결과 생성 중...'],
+      rankLabel: '진단 랭크',
+      dateLabel: '진단',
+      totalLabel: '종합 점수',
+      scores: { buzzPotential: '버즈 포텐셜', engagementScore: '참여율', profileScore: '프로필 어필', consistencyScore: '일관성', monetizationScore: '수익화 준비' },
+      diagPreviewHeader: 'AI 진단 미리보기',
+      goodLabel: '✓ 강점',
+      badLabel: '△ 개선점',
+      lockText: 'LINE에서 자세한 내용 받기 →',
+      screenshotTitle: '이 진단 결과를 스크린샷해서 TikTok에 올리세요!',
+      saveBtnLabel: '결과 저장하기',
+      lineCtaBadge: 'AI 분석 완료',
+      lineCtaTitle: 'LINE에서 상세 진단 결과를 무료로 받아보세요',
+      lineCtaDesc: 'AI가 발견한 계정 영향력을 자세히 설명해 드립니다.',
+      lineBtnText: 'LINE에서 자세히 받기（무료）',
+      rankTitles: { GOD: '인터넷을 부수는 인간', S: '멈출 수 없는 괴물', A: '폭발까지 초읽기', B: '아직 진심 안 냈어', C: '성장 가능성만 보인다' },
+      errNotFound: '사용자를 찾을 수 없습니다',
+    },
+    zh: {
+      logoText: '免费诊断',
+      pageDesc: '只需输入您的TikTok用户名。<br>AI在30秒内完全分析<br>您的账号。',
+      inputHint: '输入TikTok用户名即可自动分析',
+      btnDiagnose: '立即免费诊断',
+      freeHint: '完全免费 &nbsp;/&nbsp; 无需注册 &nbsp;/&nbsp; 约30秒',
+      loadingLabel: '分析中',
+      loadingSteps: ['正在获取TikTok数据...', '正在统计粉丝数...', '正在分析互动率...', 'AI深度分析中...', '正在生成诊断结果...'],
+      rankLabel: '诊断等级',
+      dateLabel: '诊断',
+      totalLabel: '综合评分',
+      scores: { buzzPotential: '爆款潜力', engagementScore: '互动率', profileScore: '主页吸引力', consistencyScore: '稳定性', monetizationScore: '变现准备' },
+      diagPreviewHeader: 'AI诊断预览',
+      goodLabel: '✓ 优势',
+      badLabel: '△ 改善点',
+      lockText: '在LINE上获取完整详情 →',
+      screenshotTitle: '截图这个结果发到TikTok吧！',
+      saveBtnLabel: '保存诊断结果',
+      lineCtaBadge: 'AI分析完成',
+      lineCtaTitle: '通过LINE免费获取详细诊断报告',
+      lineCtaDesc: 'AI将详细解析您账号的全部影响力。',
+      lineBtnText: '通过LINE获取详情（免费）',
+      rankTitles: { GOD: '天生病毒式传播', S: '停不下来的怪物', A: '引爆倒计时', B: '还没认真起来', C: '只看到成长空间' },
+      errNotFound: '未找到用户',
+    },
+  };
+
+  let currentLang = localStorage.getItem('lang') || 'ja';
+
+  function t(key) {
+    return (LANGS[currentLang] || LANGS.ja)[key];
+  }
+
+  function setLang(lang) {
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    // ボタンのactive更新
+    ['ja','en','ko','zh'].forEach(l => {
+      const btn = document.getElementById('langBtn' + l.charAt(0).toUpperCase() + l.slice(1));
+      if (btn) btn.classList.toggle('active', l === lang);
+    });
+    // data-i18n要素を一括更新
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      const val = LANGS[lang][key];
+      if (val !== undefined) el.innerHTML = val;
+    });
+    // html lang属性を更新
+    document.documentElement.lang = lang;
+  }
+
+  // ページ読み込み時に言語を適用
+  setLang(currentLang);
+
   const btnDiagnose = document.getElementById('btnDiagnose');
   let captionText = '';
-  let uploadedImageSrc = '';
 
-  fileInput.addEventListener('change', e => {
-    if (!e.target.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      uploadedImageSrc = ev.target.result;
-      previewImg.src = uploadedImageSrc;
-      previewWrap.style.display = 'block';
-      btnDiagnose.disabled = false;
-    };
-    reader.readAsDataURL(e.target.files[0]);
-  });
-
-  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('dragover');
-    const f = e.dataTransfer.files[0];
-    if (f && f.type.startsWith('image/')) {
-      fileInput.files = e.dataTransfer.files;
-      fileInput.dispatchEvent(new Event('change'));
+  function trackLine() {
+    // LINEボタンタップをDBに記録
+    if (currentUserId) {
+      fetch('/api/line-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUserId }),
+      }).catch(() => {});
     }
-  });
+  }
 
-  const loadingSteps = [
-    '画像を読み込み中',
-    'フォロワーデータを解析中',
-    'エンゲージメントを計測中',
-    'バズポテンシャルを診断中',
-    '診断結果を生成中',
-  ];
+  function onUsernameInput() {
+    const val = document.getElementById('usernameInput').value.trim();
+    btnDiagnose.disabled = val.length < 1;
+  }
+
+  // loadingSteps は i18n から動的取得
 
   let currentUserId = null;
   let dwellStart = Date.now();
@@ -631,50 +1031,54 @@
 
     const bar = document.getElementById('loadingBar');
     const stepText = document.getElementById('loadingStepText');
+    const loadingSteps = t('loadingSteps');
     let progress = 0;
     let stepIdx = 0;
+    stepText.textContent = loadingSteps[0];
 
-    // プログレスアニメ（APIレスポンス待ちの間）
     const iv = setInterval(() => {
-      progress = Math.min(progress + 2, 85);
+      progress = Math.min(progress + 1, 88);
       bar.style.width = progress + '%';
-      if (progress % 20 === 0 && stepIdx < loadingSteps.length - 1) {
+      if (progress % 22 === 0 && stepIdx < loadingSteps.length - 1) {
         stepIdx++;
         stepText.style.opacity = '0';
         setTimeout(() => { stepText.textContent = loadingSteps[stepIdx]; stepText.style.opacity = '1'; }, 200);
       }
-    }, 80);
+    }, 180);
 
-    // API送信
-    const formData = new FormData();
-    formData.append('image', fileInput.files[0]);
-    formData.append('device', navigator.userAgent);
-    formData.append('language', navigator.language);
-    formData.append('screen', screen.width + 'x' + screen.height);
-    formData.append('referer', document.referrer);
-    formData.append('network', navigator.connection ? navigator.connection.effectiveType : '');
-    formData.append('dwell_time', Math.floor((Date.now() - dwellStart) / 1000));
-    formData.append('operation_count', operationCount);
+    const commonParams = {
+      device: navigator.userAgent,
+      language: navigator.language,
+      screen: screen.width + 'x' + screen.height,
+      referer: document.referrer,
+      network: (navigator.connection ? navigator.connection.effectiveType : ''),
+    };
 
-    fetch('/api/diagnose', { method: 'POST', body: formData })
-      .then(r => r.json())
+    const username = document.getElementById('usernameInput').value.trim().replace(/^@/, '');
+    fetch('/api/diagnose-by-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, lang: currentLang, ...commonParams }),
+    })
+      .then(r => {
+        if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'エラー'); });
+        return r.json();
+      })
       .then(data => {
         clearInterval(iv);
         bar.style.width = '100%';
         currentUserId = data.user_id;
         setTimeout(() => showResult(data), 400);
       })
-      .catch(() => {
-        // フォールバック：デモデータで表示
+      .catch(err => {
         clearInterval(iv);
         bar.style.width = '100%';
-        const r = results[Math.floor(Math.random() * results.length)];
-        setTimeout(() => showResult(r), 400);
+        showToast(err.message || t('errNotFound'));
+        document.getElementById('screen-loading').style.display = 'none';
+        document.getElementById('screen-upload').style.display = 'flex';
       });
   }
 
-  let operationCount = 0;
-  document.addEventListener('click', () => operationCount++);
 
   const results = [
     {
@@ -812,7 +1216,7 @@
 
   function getTodayString() {
     const d = new Date();
-    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 診断`;
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${t('dateLabel')}`;
   }
 
   function showResult(r) {
@@ -821,57 +1225,73 @@
     document.getElementById('screen-loading').style.display = 'none';
     document.getElementById('screen-result').style.display = 'block';
 
-    // ユーザー情報（スクショから読み取れないためデモ表示）
+    // アバター表示：ユーザー名があれば unavatar.io で取得
     const avatarImg = document.getElementById('cardAvatarImg');
     const avatarEmoji = document.getElementById('cardAvatarEmoji');
+    const rawUsername = (r.tiktok_username || '').replace(/^@/, '');
 
-    // アップロードした画像をアバターに使用（プロフ画面の雰囲気を出す）
-    if (uploadedImageSrc) {
-      avatarImg.src = uploadedImageSrc;
+    if (rawUsername) {
+      avatarImg.src = `https://unavatar.io/tiktok/${rawUsername}`;
       avatarImg.style.display = 'block';
       avatarEmoji.style.display = 'none';
+      avatarImg.onerror = () => {
+        avatarImg.style.display = 'none';
+        avatarEmoji.textContent = avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)];
+        avatarEmoji.style.display = 'block';
+      };
     } else {
       avatarEmoji.textContent = avatarEmojis[Math.floor(Math.random() * avatarEmojis.length)];
       avatarEmoji.style.display = 'block';
     }
 
-    document.getElementById('cardUsername').textContent = '@あなたのアカウント';
+    document.getElementById('cardUsername').textContent = r.tiktok_username || '@あなたのアカウント';
     document.getElementById('cardDate').textContent = getTodayString();
 
     // ランク
     const rankBadge = document.getElementById('rankBadge');
     rankBadge.textContent = r.rank;
-    rankBadge.className = 'rank-badge ' + r.rankClass;
-    document.getElementById('rankTitle').textContent = r.title;
+    const rc = r.rankClass || ('rank-' + (r.rank || 'c').toLowerCase());
+    rankBadge.className = 'rank-badge ' + rc;
+    const titleText = r.title || (t('rankTitles') || {})[r.rank] || r.rank;
+    document.getElementById('rankTitle').textContent = titleText;
     document.getElementById('cardDesc').textContent = r.desc;
 
     // スコア
     const scoresEl = document.getElementById('cardScores');
-    scoresEl.innerHTML = r.scores.map(s => `
+    const scoreNames = t('scores') || {};
+    scoresEl.innerHTML = r.scores.map(s => {
+      const displayName = s.key ? (scoreNames[s.key] || s.key) : (s.name || '');
+      return `
       <div class="card-score-item">
         <div class="card-score-row">
-          <span class="card-score-name">${s.name}</span>
+          <span class="card-score-name">${displayName}</span>
           <span class="card-score-val">${s.val}</span>
         </div>
         <div class="card-score-bar">
           <div class="card-score-fill" data-val="${s.val}"></div>
         </div>
-      </div>`).join('');
-
-    // 分析
-    document.getElementById('analysisWrap').innerHTML = `
-      <div class="analysis-row">
-        <div class="analysis-row-label">強み</div>
-        ${r.goods.map(g => `<div class="analysis-item">${g}</div>`).join('')}
-      </div>
-      <div class="analysis-row">
-        <div class="analysis-row-label">改善ポイント</div>
-        ${r.bads.map(b => `<div class="analysis-item">${b}</div>`).join('')}
-      </div>
-      <div class="analysis-row">
-        <div class="analysis-row-label">次にやること</div>
-        ${r.nexts.map(n => `<div class="analysis-item">${n}</div>`).join('')}
       </div>`;
+    }).join('');
+
+    // 診断プレビュー
+    const previewEl = document.getElementById('diagPreview');
+    if (previewEl) {
+      const good = r.goods && r.goods[0] ? r.goods[0] : null;
+      const bad = r.bads && r.bads[0] ? r.bads[0] : null;
+      previewEl.innerHTML = `
+        <div class="diag-preview-header">${t('diagPreviewHeader')}</div>
+        ${good ? `<div class="diag-preview-item good">
+          <span class="diag-preview-label">${t('goodLabel')}</span>
+          <p>${good}</p>
+        </div>` : ''}
+        ${bad ? `<div class="diag-preview-item bad">
+          <span class="diag-preview-label">${t('badLabel')}</span>
+          <p>${bad}</p>
+        </div>` : ''}
+        <div class="diag-preview-lock">
+          <div class="diag-preview-lock-text">${t('lockText')}</div>
+        </div>`;
+    }
 
     // スコアバーアニメ
     setTimeout(() => {
@@ -903,13 +1323,51 @@
     }
     const card = document.getElementById('result-card');
     if (typeof html2canvas !== 'undefined') {
-      html2canvas(card, { scale: 2, backgroundColor: '#0d0d0d' }).then(canvas => {
-        const a = document.createElement('a');
-        a.download = 'tiktok-diagnosis.png';
-        a.href = canvas.toDataURL('image/png');
-        a.click();
-        showToast('保存しました');
+      // html2canvasはCSSアニメーションを無視するため、
+      // fade-in の opacity:0 が残ったままになる → 一時的に除去して opacity:1 を明示
+      const animatedEls = card.querySelectorAll('.fade-in');
+      animatedEls.forEach(el => {
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+        el.style.animation = 'none';
       });
+      card.style.opacity = '1';
+      card.style.animation = 'none';
+      card.classList.add('snapshot-light');
+
+      setTimeout(() => {
+        html2canvas(card, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          logging: false,
+        }).then(canvas => {
+          // スタイルを元に戻す
+          card.classList.remove('snapshot-light');
+          card.style.opacity = '';
+          card.style.animation = '';
+          animatedEls.forEach(el => {
+            el.style.opacity = '';
+            el.style.transform = '';
+            el.style.animation = '';
+          });
+          const a = document.createElement('a');
+          a.download = 'tiktok-diagnosis.png';
+          a.href = canvas.toDataURL('image/png');
+          a.click();
+          showToast('保存しました');
+        }).catch(() => {
+          card.classList.remove('snapshot-light');
+          card.style.opacity = '';
+          card.style.animation = '';
+          animatedEls.forEach(el => {
+            el.style.opacity = '';
+            el.style.transform = '';
+            el.style.animation = '';
+          });
+          showToast('保存に失敗しました');
+        });
+      }, 60);
     } else {
       showToast('画面をスクショして保存してください');
     }
@@ -921,6 +1379,78 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2200);
   }
+
+  // ===== USER SLIDER =====
+  const demoUsers = [
+    { tiktok_username: '@yuki_dance',  rank: 'B' },
+    { tiktok_username: '@tokyo_fit',   rank: 'C' },
+    { tiktok_username: '@haruto99',    rank: 'B' },
+    { tiktok_username: '@osaka_vlog',  rank: 'C' },
+    { tiktok_username: '@mika_recipe', rank: 'A' },
+    { tiktok_username: '@kenta_2024',  rank: 'B' },
+    { tiktok_username: '@rina_cook',   rank: 'C' },
+    { tiktok_username: '@shibuya_tv',  rank: 'C' },
+    { tiktok_username: '@nano_music',  rank: 'B' },
+    { tiktok_username: '@ryu_fitness', rank: 'A' },
+    { tiktok_username: '@sora_art',    rank: 'S' },
+    { tiktok_username: '@mai_beauty',  rank: 'C' },
+    { tiktok_username: '@takeshi_jp',  rank: 'B' },
+    { tiktok_username: '@hana_life',   rank: 'C' },
+    { tiktok_username: '@kenji_vlog',  rank: 'C' },
+    { tiktok_username: '@ayaka_style', rank: 'B' },
+  ];
+
+  function buildChip(user) {
+    const rank = (user.rank || 'C').toLowerCase();
+    const rankLabel = user.rank || 'C';
+    const rawName = user.tiktok_username || 'user';
+    const displayName = rawName.startsWith('@') ? rawName : '@' + rawName;
+    const cleanName = rawName.replace(/^@/, '');
+    // イニシャルはフォールバック用
+    const initial = cleanName.charAt(0).toUpperCase() || '?';
+    // unavatar.io でTikTokアバターをAPIなしで取得（失敗時はイニシャル表示）
+    const avatarUrl = `https://unavatar.io/tiktok/${encodeURIComponent(cleanName)}`;
+    return `
+      <div class="user-chip">
+        <div class="user-avatar av-${rank}">
+          <span class="av-initial">${initial}</span>
+          <img src="${avatarUrl}" alt="" loading="lazy"
+            onload="this.previousElementSibling.style.display='none'"
+            onerror="this.style.display='none'">
+        </div>
+        <span class="user-name">${displayName}</span>
+        <span class="rank-pill ${rank}">${rankLabel}</span>
+      </div>`;
+  }
+
+  function fillSlider(users) {
+    const base = users.length >= 8 ? users : [...users, ...demoUsers].slice(0, Math.max(users.length + demoUsers.length, 12));
+    // 両行に同じ数のアイテムを持たせる（行2は逆順でシャッフル感を出す）
+    const row1Users = base;
+    const row2Users = [...base].reverse();
+
+    function makeRow(rowUsers) {
+      // ループのために3倍に複製（十分な幅を確保）
+      return [...rowUsers, ...rowUsers, ...rowUsers].map(buildChip).join('');
+    }
+
+    document.getElementById('sliderRow1').innerHTML = makeRow(row1Users);
+    document.getElementById('sliderRow2').innerHTML = makeRow(row2Users);
+  }
+
+  (async function initSlider() {
+    try {
+      const res = await fetch('/api/recent-users');
+      const apiUsers = await res.json();
+      if (Array.isArray(apiUsers) && apiUsers.length >= 4) {
+        fillSlider(apiUsers);
+      } else {
+        fillSlider([...apiUsers, ...demoUsers]);
+      }
+    } catch {
+      fillSlider(demoUsers);
+    }
+  })();
 </script>
 </body>
 </html>

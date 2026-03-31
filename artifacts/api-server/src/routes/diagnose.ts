@@ -173,7 +173,7 @@ interface AiAnalysis {
   goods: string[]; bads: string[]; nexts: string[];
 }
 
-async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
+async function analyzeWithAI(profile: TikTokProfile, lang = "ja"): Promise<AiAnalysis> {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   // 動画1本あたりの平均いいね率（より実態に近いエンゲージメント指標）
   const avgLikesPerVideo = profile.videoCount > 0 ? Math.floor(profile.likes / profile.videoCount) : 0;
@@ -235,7 +235,11 @@ titleは「完全にバズる人間」「爆発まで秒読み」のような、
 - C: 43以下（一般クリエイター・これからの人）
 
 ランク分布目安: GOD 2%、S 8%、A 20%、B 40%、C 30%
-（一般的なTikTokerの大多数はB〜Cになるよう、フォロワー数を軸に厳しく評価すること）`;
+（一般的なTikTokerの大多数はB〜Cになるよう、フォロワー数を軸に厳しく評価すること）${
+  lang === "en" ? "\n\nIMPORTANT: Respond entirely in English. All fields (title, desc, goods, bads, nexts) must be written in English." :
+  lang === "ko" ? "\n\n중요: title, desc, goods, bads, nexts 모든 필드를 한국어로 작성하세요." :
+  lang === "zh" ? "\n\n重要：title, desc, goods, bads, nexts 所有字段请用简体中文。" : ""
+}`;
 
   const aiRes = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -363,7 +367,7 @@ router.post("/diagnose", upload.single("image"), async (req, res) => {
 
 // ===== ユーザー名で診断（スクレイピング） =====
 router.post("/diagnose-by-username", async (req, res) => {
-  const { username, device = "", language = "", screen = "", referer = "", network = "" } = req.body as Record<string, string>;
+  const { username, device = "", language = "", screen = "", referer = "", network = "", lang = "ja" } = req.body as Record<string, string>;
   if (!username) { res.status(400).json({ error: "ユーザー名が必要です" }); return; }
 
   let profile: TikTokProfile;
@@ -378,7 +382,7 @@ router.post("/diagnose-by-username", async (req, res) => {
   // GPT-4o AI解析（失敗時は数式フォールバック）
   let ai: AiAnalysis;
   try {
-    ai = await analyzeWithAI(profile);
+    ai = await analyzeWithAI(profile, lang);
   } catch (err) {
     req.log.warn({ err }, "AI analysis failed, falling back to formula");
     const s = calcScores(profile.followers, profile.likes, !!profile.bio, profile.is_business, profile.videoCount || 0);
@@ -415,11 +419,11 @@ router.post("/diagnose-by-username", async (req, res) => {
     user_id: userId,
     tiktok_username: tiktokUsername,
     scores: [
-      { name: "バズポテンシャル", val: ai.buzzPotential },
-      { name: "エンゲージメント率", val: ai.engagementScore },
-      { name: "プロフィール訴求力", val: ai.profileScore },
-      { name: "コンテンツの一貫性", val: ai.consistencyScore },
-      { name: "収益化の準備度", val: ai.monetizationScore },
+      { key: "buzzPotential",    val: ai.buzzPotential },
+      { key: "engagementScore",  val: ai.engagementScore },
+      { key: "profileScore",     val: ai.profileScore },
+      { key: "consistencyScore", val: ai.consistencyScore },
+      { key: "monetizationScore",val: ai.monetizationScore },
     ],
     goods: ai.goods,
     bads: ai.bads,
