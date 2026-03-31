@@ -1,0 +1,29 @@
+nating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+root@srv1087935:/var/www/tiktokshindan# pm2 logs tiktokshindan --lines 30
+[TAILING] Tailing last 30 lines for [tiktokshindan] process (change the value with --lines option)
+/root/.pm2/logs/tiktokshindan-error.log last 30 lines:
+/root/.pm2/logs/tiktokshindan-out.log last 30 lines:
+40|tiktoks | {"level":30,"time":1774929654841,"pid":1520889,"hostname":"srv1087935","port":3100,"msg":"Server listening"}
+40|tiktoks | {"level":30,"time":1774929669917,"pid":1520889,"hostname":"srv1087935","req":{"id":1,"method":"GET","url":"/api/healthz"},"res":{"statusCode":200},"responseTime":6,"msg":"request completed"}
+40|tiktoks | {"level":30,"time":1774929721336,"pid":1520889,"hostname":"srv1087935","req":{"id":2,"method":"GET","url":"/"},"res":{"statusCode":200},"responseTime":6,"msg":"request completed"}
+40|tiktoks | {"level":30,"time":1774929721736,"pid":1520889,"hostname":"srv1087935","req":{"id":3,"method":"GET","url":"/"},"res":{"statusCode":200},"responseTime":2,"msg":"request completed"}
+40|tiktoks | {"level":30,"time":1774929728238,"pid":1520889,"hostname":"srv1087935","req":{"id":4,"method":"GET","url":"/"},"res":{"statusCode":200},"responseTime":1,"msg":"request completed"}
+40|tiktoks | {"level":30,"time":1774929728301,"pid":1520889,"hostname":"srv1087935","req":{"id":5,"method":"GET","url":"/"},"res":{"statusCode":200},"responseTime":1,"msg":"request completed"}
+40|tiktoks | {"level":30,"time":1774929728604,"pid":1520889,"hostname":"srv1087935","req":{"id":6,"method":"GET","url":"/favicon.ico"},"res":{"statusCode":404},"responseTime":3,"msg":"request completed"}
+40|tiktoks | {"level":30,"time":1774929728665,"pid":1520889,"hostname":"srv1087935","req":{"id":7,"method":"GET","url":"/favicon.ico"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+40|tiktoks | {"level":30,"time":1774929748103,"pid":1520889,"hostname":"srv1087935","req":{"id":8,"method":"GET","url":"/"},"res":{"statusCode":200},"responseTime":2,"msg":"request completed"}
+40|tiktoks | {"level":30,"time":1774929748153,"pid":1520889,"hostname":"srv1087935","req":{"id":9,"method":"GET","url":"/"},"res":{"statusCode":200},"responseTime":2,"msg":"request completed"}
+
+40|tiktokshindan  | (node:1520889) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+40|tiktokshindan  | In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+40|tiktokshindan  | To prepare for this change:
+40|tiktokshindan  | - If you want the current behavior, explicitly use 'sslmode=verify-full'
+40|tiktokshindan  | - If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+40|tiktokshindan  | See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+40|tiktokshindan  | (Use `node --trace-warnings ...` to show where the warning was created)
+40|tiktokshindan  | {"level":30,"time":1774929749085,"pid":1520889,"hostname":"srv1087935","req":{"id":11,"method":"GET","url":"/favicon.ico"},"res":{"statusCode":404},"responseTime":2,"msg":"request completed"}
+40|tiktokshindan  | {"level":30,"time":1774929749295,"pid":1520889,"hostname":"srv1087935","req":{"id":13,"method":"GET","url":"/favicon.ico"},"res":{"statusCode":404},"responseTime":1,"msg":"request completed"}
+40|tiktokshindan  | {"level":30,"time":1774929751975,"pid":1520889,"hostname":"srv1087935","req":{"id":12,"method":"GET","url":"/api/recent-users"},"res":{"statusCode":200},"responseTime":2866,"msg":"request completed"}
+40|tiktokshindan  | {"level":30,"time":1774929751979,"pid":1520889,"hostname":"srv1087935","req":{"id":10,"method":"GET","url":"/api/recent-users"},"res":{"statusCode":200},"responseTime":2959,"msg":"request completed"}
+
