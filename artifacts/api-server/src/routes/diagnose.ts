@@ -237,6 +237,25 @@ function calcScores(followers: number, likes: number, hasBio: boolean, isBusines
   return { buzzPotential, engagementScore, profileScore, consistencyScore, monetizationScore, total, rank };
 }
 
+function generateFallbackGoods(profile: TikTokProfile, s: ReturnType<typeof calcScores>): string[] {
+  const goods: string[] = [];
+  if ((profile.followers || 0) >= 10000) goods.push(`フォロワー${(profile.followers||0).toLocaleString()}人と一定の影響力を持っている`);
+  else if ((profile.followers || 0) >= 1000) goods.push(`フォロワー${(profile.followers||0).toLocaleString()}人と着実に成長している`);
+  else goods.push("アカウントの方向性が明確になれば急成長の可能性がある");
+  if (profile.bio) goods.push("プロフィールを設定しており、新規ユーザーへの訴求ができている");
+  if ((profile.videoCount || 0) >= 20) goods.push("投稿数が多く、継続的にコンテンツを発信できている");
+  return goods.slice(0, 2);
+}
+
+function generateFallbackBads(profile: TikTokProfile, s: ReturnType<typeof calcScores>): string[] {
+  const bads: string[] = [];
+  if (!profile.bio) bads.push("プロフィールが未設定で、新規ユーザーがフォローする理由が見つかりにくい");
+  if (s.engagementScore < 40) bads.push("エンゲージメント率が低く、フォロワーとの関係性を深める施策が必要");
+  if ((profile.videoCount || 0) < 10) bads.push("投稿数が少なく、アルゴリズムへの露出が不足している");
+  if (bads.length === 0) bads.push("さらなる成長のためにコンテンツの差別化戦略が必要");
+  return bads.slice(0, 2);
+}
+
 // ===== GPT-4o AI解析 =====
 interface AiAnalysis {
   rank: string; title: string; desc: string;
@@ -506,7 +525,9 @@ router.post("/diagnose-by-username", async (req, res) => {
       buzzPotential: s.buzzPotential, engagementScore: s.engagementScore,
       profileScore: s.profileScore, consistencyScore: s.consistencyScore,
       monetizationScore: s.monetizationScore, total: s.total,
-      goods: [], bads: [], nexts: [], costUsd: 0,
+      goods: generateFallbackGoods(profile, s),
+      bads: generateFallbackBads(profile, s),
+      nexts: [], costUsd: 0,
     };
   }
 

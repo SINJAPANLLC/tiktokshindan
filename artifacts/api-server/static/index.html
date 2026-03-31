@@ -879,7 +879,7 @@
       btnDiagnose: '今すぐ無料診断する',
       freeHint: '完全無料 &nbsp;/&nbsp; 登録不要 &nbsp;/&nbsp; 約30秒',
       loadingLabel: '解析中',
-      loadingSteps: ['TikTokのデータを引っ張ってます', 'フォロワーを数えてます', 'エンゲージメントを解剖中', 'AIがガチ分析してます', '診断結果まとめてます'],
+      loadingSteps: ['アカウント情報を取得中...', 'フォロワーデータを解析中...', 'エンゲージメントを計測中...', 'AIが詳細を分析中...', '診断結果を生成中...'],
       rankLabel: '診断ランク',
       dateLabel: '診断',
       totalLabel: '総合スコア',
@@ -904,7 +904,7 @@
       btnDiagnose: 'Diagnose for Free Now',
       freeHint: 'Completely Free &nbsp;/&nbsp; No Sign-up &nbsp;/&nbsp; ~30 sec',
       loadingLabel: 'Analyzing',
-      loadingSteps: ['Fetching TikTok data...', 'Counting followers...', 'Analyzing engagement...', 'AI deep analysis in progress...', 'Generating your results...'],
+      loadingSteps: ['Retrieving account info...', 'Analyzing follower data...', 'Measuring engagement...', 'AI deep analysis in progress...', 'Generating your results...'],
       rankLabel: 'RANK',
       dateLabel: 'Report',
       totalLabel: 'Total Score',
@@ -1342,7 +1342,6 @@
           useCORS: true,
           logging: false,
         }).then(canvas => {
-          // スタイルを元に戻す
           card.classList.remove('snapshot-light');
           card.style.opacity = '';
           card.style.animation = '';
@@ -1351,11 +1350,27 @@
             el.style.transform = '';
             el.style.animation = '';
           });
-          const a = document.createElement('a');
-          a.download = 'tiktok-diagnosis.png';
-          a.href = canvas.toDataURL('image/png');
-          a.click();
-          showToast('保存しました');
+          const dataUrl = canvas.toDataURL('image/png');
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+          if (isIOS) {
+            // iOSは a.click() ダウンロードが動作しないため新しいタブで開く
+            const w = window.open('');
+            if (w) {
+              w.document.write(`<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>診断結果</title></head><body style="margin:0;background:#000;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px;box-sizing:border-box"><img src="${dataUrl}" style="max-width:100%;border-radius:8px"><p style="color:#fff;font-size:14px;margin-top:16px;text-align:center;font-family:sans-serif">画像を長押しして「写真に追加」を選んでください</p></body></html>`);
+              w.document.close();
+              showToast('長押しで保存できます');
+            } else {
+              showToast('ポップアップをブロックしています。解除してください');
+            }
+          } else {
+            const a = document.createElement('a');
+            a.download = 'tiktok-diagnosis.png';
+            a.href = dataUrl;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('保存しました');
+          }
         }).catch(() => {
           card.classList.remove('snapshot-light');
           card.style.opacity = '';
@@ -1365,7 +1380,7 @@
             el.style.transform = '';
             el.style.animation = '';
           });
-          showToast('保存に失敗しました');
+          showToast('画面をスクショして保存してください');
         });
       }, 60);
     } else {
