@@ -28,6 +28,19 @@ app.use(
   }),
 );
 app.use(cors());
+
+// LINE webhook用: raw body を取得（署名検証に必要）
+app.use("/api/line-webhook", (req, _res, next) => {
+  let raw = "";
+  req.setEncoding("utf8");
+  req.on("data", (chunk: string) => { raw += chunk; });
+  req.on("end", () => {
+    (req as any).rawBody = raw;
+    try { req.body = JSON.parse(raw); } catch { req.body = {}; }
+    next();
+  });
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
