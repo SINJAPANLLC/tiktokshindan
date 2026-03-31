@@ -115,10 +115,10 @@ function calcScores(followers: number, likes: number, hasBio: boolean, isBusines
   const monetizationScore = isBusiness ? 50 : 35;
   const total = Math.max(0, Math.floor((buzzPotential + engagementScore + profileScore + consistencyScore + monetizationScore) / 5));
   let rank: string;
-  if (total >= 85) rank = "GOD";
-  else if (total >= 70) rank = "S";
-  else if (total >= 55) rank = "A";
-  else if (total >= 40) rank = "B";
+  if (total >= 78) rank = "GOD";
+  else if (total >= 65) rank = "S";
+  else if (total >= 52) rank = "A";
+  else if (total >= 38) rank = "B";
   else rank = "C";
   return { buzzPotential, engagementScore, profileScore, consistencyScore, monetizationScore, total, rank };
 }
@@ -152,37 +152,40 @@ async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
 公認バッジ: ${profile.verified ? "あり" : "なし"}
 ビジネスアカウント: ${profile.is_business ? "はい" : "いいえ"}
 
-【重要】スコアリングガイドライン:
-- フォロワー数が多いほどbuzzPotentialを高く評価すること（1万→50点、10万→65点、100万→80点、1000万以上→95点）
-- エンゲージメント率1%以上は高評価（TikTok平均は0.5〜2%）
-- bioの有無やビジネスアカウントかどうかは加点要素にはなるが、大きく減点しないこと
-- 公認バッジありはbuzzPotential+10点
-- 全体的にユーザーのモチベーションが上がるよう、ポジティブな評価を心がけること
+【重要】スコアリングガイドライン（ポジティブ・甘め評価）:
+- フォロワー数でbuzzPotentialを決める目安（1,000人→55点、1万→68点、10万→82点、100万→93点、1000万以上→100点）
+- エンゲージメント率0.5%以上は良好（TikTok平均は0.3〜1%）、2%以上は優秀として高得点
+- 動画を投稿しているだけでconsistencyScoreは60点以上からスタート
+- bioがなくても大きく減点しない（profileScoreの最低は50点）
+- すべてのスコアは基本60点以上を出発点として加点方式で考えること
+- 公認バッジありは全スコア+5点ボーナス
+- ユーザーが励まされ、もっと頑張ろうと思えるような前向きな評価をすること
 
 返却JSON形式:
 {
-  "rank": "B",
+  "rank": "A",
   "title": "診断タイトル（15文字以内のキャッチコピー）",
   "desc": "このアカウントの診断説明（60文字以内、具体的に）",
-  "buzzPotential": 65,
-  "engagementScore": 70,
-  "profileScore": 60,
-  "consistencyScore": 65,
-  "monetizationScore": 55,
-  "total": 63,
+  "buzzPotential": 75,
+  "engagementScore": 72,
+  "profileScore": 65,
+  "consistencyScore": 70,
+  "monetizationScore": 60,
+  "total": 68,
   "goods": ["強み1（具体的に）", "強み2（具体的に）"],
   "bads": ["改善点1（具体的に）", "改善点2（具体的に）"],
   "nexts": ["今すぐできる具体的アクション1", "今すぐできる具体的アクション2"]
 }
 
 ランク基準（totalスコアで判定）:
-- GOD: 85以上（トップクリエイター・完成されたアカウント）
-- S: 70〜84（強い影響力・インフルエンサー級）
-- A: 55〜69（成長中・大きな可能性あり）
-- B: 40〜54（伸び代あり・改善で飛躍できる）
-- C: 39以下（初期段階・基礎から強化）
+- GOD: 78以上（トップクリエイター・完全に完成されたアカウント）
+- S: 65〜77（強い影響力・インフルエンサー級）
+- A: 52〜64（成長中・大きな可能性あり）
+- B: 38〜51（伸び代あり・改善で飛躍できる）
+- C: 37以下（初期段階・基礎から強化）
 
-ランク分布目安: GOD 5%、S 15%、A 30%、B 35%、C 15%（大多数はA〜Bに入るよう評価すること）`;
+ランク分布目安: GOD 10%、S 20%、A 35%、B 25%、C 10%
+（多くのユーザーがAランク以上を取れるよう、全体的に高めのスコアをつけること）`;
 
   const aiRes = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -200,10 +203,10 @@ async function analyzeWithAI(profile: TikTokProfile): Promise<AiAnalysis> {
   const total = clamp(p.total);
   // totalから正確にランクを再計算（AIの申告ランクとズレを防ぐ）
   let rank: string;
-  if (total >= 85) rank = "GOD";
-  else if (total >= 70) rank = "S";
-  else if (total >= 55) rank = "A";
-  else if (total >= 40) rank = "B";
+  if (total >= 78) rank = "GOD";
+  else if (total >= 65) rank = "S";
+  else if (total >= 52) rank = "A";
+  else if (total >= 38) rank = "B";
   else rank = "C";
   return {
     rank,
