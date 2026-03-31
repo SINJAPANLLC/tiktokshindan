@@ -498,6 +498,77 @@
   }
   .btn-line:hover { background: #05b34c; }
 
+  /* ===== モード切替 ===== */
+  .mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 18px;
+    border: 1.5px solid var(--black);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .mode-tab {
+    flex: 1;
+    padding: 11px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--gray4);
+    transition: background 0.15s, color 0.15s;
+  }
+  .mode-tab.active {
+    background: var(--black);
+    color: var(--white);
+  }
+  .mode-tab:not(.active):hover { background: #f0f0f0; color: var(--black); }
+
+  /* ユーザー名入力 */
+  .username-input-wrap {
+    margin-bottom: 0;
+  }
+  .username-field {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--gray5);
+    border-radius: 6px;
+    padding: 14px 16px;
+    gap: 8px;
+    transition: border-color 0.2s;
+    background: #fff;
+  }
+  .username-field:focus-within {
+    border-color: var(--black);
+  }
+  .username-at {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray4);
+    flex-shrink: 0;
+  }
+  .username-field input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--black);
+    background: transparent;
+    min-width: 0;
+  }
+  .username-field input::placeholder { color: var(--gray5); }
+  .username-hint {
+    font-size: 11px;
+    color: var(--gray4);
+    margin-top: 8px;
+    font-weight: 300;
+    letter-spacing: 0.03em;
+  }
+
   .toast {
     position: fixed;
     bottom: 28px;
@@ -637,15 +708,35 @@
         <p class="page-desc">プロフィール画面のスクリーンショットを<br>アップロードするだけ。AIが30秒で<br>あなたのTikTokを完全解析します。</p>
       </div>
       <div class="upload-col-right">
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-          <div class="upload-label">スクショをアップロード</div>
-          <div class="upload-sub">TikTokのプロフィール画面<br>（フォロワー数・いいね数が見えるもの）</div>
-          <input type="file" id="fileInput" accept="image/*">
+
+        <!-- モード切替タブ -->
+        <div class="mode-tabs">
+          <button class="mode-tab active" id="tabImage" onclick="switchMode('image')">スクショで診断</button>
+          <button class="mode-tab" id="tabUsername" onclick="switchMode('username')">@ユーザー名で診断</button>
         </div>
 
-        <div class="preview-wrap" id="previewWrap">
-          <img id="previewImg" src="" alt="">
-          <div class="preview-tag">選択済み</div>
+        <!-- 画像モード -->
+        <div id="modeImage">
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-label">スクショをアップロード</div>
+            <div class="upload-sub">TikTokのプロフィール画面<br>（フォロワー数・いいね数が見えるもの）</div>
+            <input type="file" id="fileInput" accept="image/*">
+          </div>
+          <div class="preview-wrap" id="previewWrap">
+            <img id="previewImg" src="" alt="">
+            <div class="preview-tag">選択済み</div>
+          </div>
+        </div>
+
+        <!-- ユーザー名モード -->
+        <div id="modeUsername" style="display:none;">
+          <div class="username-input-wrap">
+            <div class="username-field">
+              <span class="username-at">@</span>
+              <input type="text" id="usernameInput" placeholder="tiktok_username" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" oninput="onUsernameInput()">
+            </div>
+            <p class="username-hint">TikTokのユーザー名を入力するだけで自動解析します</p>
+          </div>
         </div>
 
         <button class="btn-main" id="btnDiagnose" disabled onclick="startDiagnosis()">
@@ -744,6 +835,28 @@
   const btnDiagnose = document.getElementById('btnDiagnose');
   let captionText = '';
   let uploadedImageSrc = '';
+  let currentMode = 'image'; // 'image' | 'username'
+
+  // ===== モード切替 =====
+  function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tabImage').classList.toggle('active', mode === 'image');
+    document.getElementById('tabUsername').classList.toggle('active', mode === 'username');
+    document.getElementById('modeImage').style.display = mode === 'image' ? 'block' : 'none';
+    document.getElementById('modeUsername').style.display = mode === 'username' ? 'block' : 'none';
+    // ボタン状態リセット
+    if (mode === 'image') {
+      btnDiagnose.disabled = !fileInput.files[0];
+    } else {
+      const val = document.getElementById('usernameInput').value.trim();
+      btnDiagnose.disabled = val.length < 1;
+    }
+  }
+
+  function onUsernameInput() {
+    const val = document.getElementById('usernameInput').value.trim();
+    btnDiagnose.disabled = val.length < 1;
+  }
 
   fileInput.addEventListener('change', e => {
     if (!e.target.files[0]) return;
@@ -789,7 +902,6 @@
     let progress = 0;
     let stepIdx = 0;
 
-    // プログレスアニメ（APIレスポンス待ちの間）
     const iv = setInterval(() => {
       progress = Math.min(progress + 2, 85);
       bar.style.width = progress + '%';
@@ -800,29 +912,54 @@
       }
     }, 80);
 
-    // API送信
-    const formData = new FormData();
-    formData.append('image', fileInput.files[0]);
-    formData.append('device', navigator.userAgent);
-    formData.append('language', navigator.language);
-    formData.append('screen', screen.width + 'x' + screen.height);
-    formData.append('referer', document.referrer);
-    formData.append('network', navigator.connection ? navigator.connection.effectiveType : '');
-    formData.append('dwell_time', Math.floor((Date.now() - dwellStart) / 1000));
-    formData.append('operation_count', operationCount);
+    const commonParams = {
+      device: navigator.userAgent,
+      language: navigator.language,
+      screen: screen.width + 'x' + screen.height,
+      referer: document.referrer,
+      network: (navigator.connection ? navigator.connection.effectiveType : ''),
+    };
 
-    fetch('/api/diagnose', { method: 'POST', body: formData })
-      .then(r => r.json())
+    let fetchPromise;
+
+    if (currentMode === 'username') {
+      // ユーザー名モード：JSONで送信
+      const username = document.getElementById('usernameInput').value.trim().replace(/^@/, '');
+      fetchPromise = fetch('/api/diagnose-by-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, ...commonParams }),
+      }).then(r => {
+        if (!r.ok) return r.json().then(e => { throw new Error(e.error || 'エラー'); });
+        return r.json();
+      });
+    } else {
+      // 画像モード：FormDataで送信
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+      Object.entries(commonParams).forEach(([k, v]) => formData.append(k, v));
+      formData.append('dwell_time', Math.floor((Date.now() - dwellStart) / 1000));
+      formData.append('operation_count', operationCount);
+      fetchPromise = fetch('/api/diagnose', { method: 'POST', body: formData }).then(r => r.json());
+    }
+
+    fetchPromise
       .then(data => {
         clearInterval(iv);
         bar.style.width = '100%';
         currentUserId = data.user_id;
         setTimeout(() => showResult(data), 400);
       })
-      .catch(() => {
-        // フォールバック：デモデータで表示
+      .catch(err => {
         clearInterval(iv);
         bar.style.width = '100%';
+        if (currentMode === 'username' && err.message) {
+          showToast(err.message);
+          document.getElementById('screen-loading').style.display = 'none';
+          document.getElementById('screen-upload').style.display = 'flex';
+          return;
+        }
+        // 画像モードのフォールバック
         const r = results[Math.floor(Math.random() * results.length)];
         setTimeout(() => showResult(r), 400);
       });

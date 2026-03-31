@@ -8,6 +8,74 @@ import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 
+// ===== TikTokプロフィール スクレイピング =====
+interface TikTokProfile {
+  tiktok_username: string | null;
+  followers: number;
+  following: number;
+  likes: number;
+  videoCount: number;
+  bio: string;
+  verified: boolean;
+  is_business: boolean;
+  genre: string;
+}
+
+async function scrapeTikTokProfile(username: string): Promise<TikTokProfile> {
+  const cleanName = username.replace(/^@/, "").trim();
+  const url = `https://www.tiktok.com/@${cleanName}`;
+
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      "Accept-Language": "ja-JP,ja;q=0.9,en-US;q=0.8",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    },
+    signal: AbortSignal.timeout(12000),
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+  const html = await res.text();
+
+  // __UNIVERSAL_DATA_FOR_REHYDRATION__ から JSON を抽出
+  const scriptMatch = html.match(
+    /<script[^>]+id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([^<]+)<\/script>/,
+  );
+  if (!scriptMatch) throw new Error("TikTok data script not found");
+
+  const data = JSON.parse(scriptMatch[1]) as Record<string, unknown>;
+  const scope = data["__DEFAULT_SCOPE__"] as Record<string, unknown> | undefined;
+  const userDetail = scope?.["webapp.user-detail"] as Record<string, unknown> | undefined;
+  const userInfo = userDetail?.["userInfo"] as Record<string, unknown> | undefined;
+  const user = userInfo?.["user"] as Record<string, unknown> | undefined;
+  const stats = userInfo?.["stats"] as Record<string, unknown> | undefined;
+
+  if (!user || !stats) throw new Error("User data not found in TikTok response");
+
+  const followers = Number(stats["followerCount"] ?? 0);
+  // heartCount はオーバーフローで負になる場合がある。heart フィールドを優先
+  const rawLikes = Number(stats["heart"] ?? stats["heartCount"] ?? 0);
+  const likes = Math.max(0, rawLikes);
+  const videoCount = Number(stats["videoCount"] ?? 0);
+  const bio = String(user["signature"] ?? "");
+  const verified = Boolean(user["verified"]);
+  const is_business = Boolean((user["commerceUserInfo"] as Record<string, unknown>)?.["commerceUser"]);
+
+  // フォロワー数・投稿数からジャンルは推定困難なので「その他」
+  return {
+    tiktok_username: "@" + String(user["uniqueId"] ?? cleanName),
+    followers,
+    following: Number(stats["followingCount"] ?? 0),
+    likes,
+    videoCount,
+    bio,
+    verified,
+    is_business,
+    genre: "その他",
+  };
+}
+
 const router: IRouter = Router();
 
 const uploadsDir = path.resolve(import.meta.dirname, "../../static/uploads");
@@ -35,152 +103,52 @@ const rankDescs: Record<string, string> = {
   C: "現状はまだ成長途中。改善ポイントが明確な分、伸びしろは全ランク中で最大だ。",
 };
 
-router.post("/diagnose", upload.single("image"), async (req, res) => {
-  const file = req.file;
-  if (!file) {
-    res.status(400).json({ error: "画像が必要です" });
-    return;
-  }
-
-  const imageUrl = `/api/static/uploads/${file.filename}`;
-
-  const { device = "", language = "", screen = "", referer = "", network = "" } = req.body;
-  const dwellTime = parseInt(req.body.dwell_time || "0", 10);
-  const operationCount = parseInt(req.body.operation_count || "0", 10);
-  const scrollDepth = parseInt(req.body.scroll_depth || "0", 10);
-
-  let tiktokData: Record<string, unknown> = {
-    tiktok_username: null,
-    followers: 0,
-    likes: 0,
-    bio: "",
-    is_business: false,
-    genre: "その他",
-  };
-
-  try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-    const imageData = fs.readFileSync(file.path);
-    const b64 = imageData.toString("base64");
-    const mimeType = file.mimetype || "image/jpeg";
-
-    const visionPrompt = `このTikTokのプロフィール画面のスクリーンショットから以下の情報をJSONで返してください。
-取得できない場合はnullとしてください。
-
-{
-  "tiktok_username": "@xxx",
-  "followers": 数値（万の場合は10000倍に変換）,
-  "following": 数値,
-  "likes": 数値,
-  "bio": "プロフィール文",
-  "is_business": true/false,
-  "genre": "推定ジャンル（料理/ダンス/ビジネス/ライフスタイル/エンタメ/その他）"
-}
-
-JSONのみ返してください。マークダウンは不要です。`;
-
-    const visionRes = await openai.chat.completions.create({
-      model: "gpt-4o",
-      max_tokens: 500,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image_url",
-              image_url: { url: `data:${mimeType};base64,${b64}`, detail: "high" },
-            },
-            { type: "text", text: visionPrompt },
-          ],
-        },
-      ],
-    });
-
-    const text = visionRes.choices[0]?.message?.content || "";
-    try {
-      tiktokData = JSON.parse(text);
-    } catch {
-      req.log.warn("Failed to parse OpenAI vision response as JSON");
-    }
-  } catch (err) {
-    req.log.warn({ err }, "Vision API call failed, using defaults");
-  }
-
-  const followers = (tiktokData["followers"] as number) || 0;
-  const likes = (tiktokData["likes"] as number) || 0;
-  const engagement = followers > 0 ? (likes / followers) * 100 : 0;
-
-  const buzzPotential = Math.min(100, Math.floor(engagement * 2 + (followers / 10000) * 10));
-  const engagementScore = Math.min(100, Math.floor(engagement * 3));
-  const profileScore = tiktokData["bio"] ? 60 : 30;
+// ===== 共通スコア計算 =====
+function calcScores(followers: number, likes: number, hasBio: boolean, isBusiness: boolean) {
+  const safeFollowers = Math.max(0, followers || 0);
+  const safeLikes = Math.max(0, likes || 0);
+  const engagement = safeFollowers > 0 ? (safeLikes / safeFollowers) * 100 : 0;
+  const buzzPotential = Math.min(100, Math.max(0, Math.floor(engagement * 2 + (safeFollowers / 10000) * 10)));
+  const engagementScore = Math.min(100, Math.max(0, Math.floor(engagement * 3)));
+  const profileScore = hasBio ? 60 : 30;
   const consistencyScore = 65;
-  const monetizationScore = tiktokData["is_business"] ? 50 : 35;
-
-  const total = Math.floor(
-    (buzzPotential + engagementScore + profileScore + consistencyScore + monetizationScore) / 5,
-  );
-
+  const monetizationScore = isBusiness ? 50 : 35;
+  const total = Math.max(0, Math.floor((buzzPotential + engagementScore + profileScore + consistencyScore + monetizationScore) / 5));
   let rank: string;
   if (total >= 90) rank = "GOD";
   else if (total >= 78) rank = "S";
   else if (total >= 65) rank = "A";
   else if (total >= 50) rank = "B";
   else rank = "C";
+  return { buzzPotential, engagementScore, profileScore, consistencyScore, monetizationScore, total, rank };
+}
 
-  let pref = "不明";
-  let city = "不明";
+async function getGeo(req: { headers: Record<string, string | string[] | undefined>, socket: { remoteAddress?: string } }) {
+  let pref = "不明", city = "不明";
   try {
     const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.socket.remoteAddress || "";
-    const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?lang=ja&fields=regionName,city`, {
-      signal: AbortSignal.timeout(2000),
-    });
+    const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?lang=ja&fields=regionName,city`, { signal: AbortSignal.timeout(2000) });
     const geoData = (await geoRes.json()) as Record<string, string>;
     pref = geoData["regionName"] || "不明";
     city = geoData["city"] || "不明";
-  } catch {
-    // geo lookup failed silently
-  }
+  } catch { /* silent */ }
+  return { pref, city };
+}
 
-  const userId = uuidv4();
-
-  await db.insert(usersTable).values({
-    id: userId,
-    tiktokUsername: (tiktokData["tiktok_username"] as string) || null,
-    followers,
-    rank,
-    score: total,
-    pref,
-    city,
-    device: device.substring(0, 100),
-    browser: "",
-    language,
-    network,
-    screenSize: screen,
-    dwellTime,
-    scrollDepth,
-    operationCount,
-    revisitCount: 1,
-    lineRegistered: false,
-    saved: false,
-    imageUrl,
-    referer: referer.substring(0, 200),
-    genre: (tiktokData["genre"] as string) || "その他",
-  });
-
-  res.json({
+function buildResponse(rank: string, total: number, userId: string, tiktokUsername: string, followers: number, scores: ReturnType<typeof calcScores>) {
+  return {
     rank,
     title: rankTitles[rank],
     desc: rankDescs[rank],
     total,
     user_id: userId,
-    tiktok_username: (tiktokData["tiktok_username"] as string) || "@あなたのアカウント",
+    tiktok_username: tiktokUsername,
     scores: [
-      { name: "バズポテンシャル", val: buzzPotential },
-      { name: "エンゲージメント率", val: engagementScore },
-      { name: "プロフィール訴求力", val: profileScore },
-      { name: "コンテンツの一貫性", val: consistencyScore },
-      { name: "収益化の準備度", val: monetizationScore },
+      { name: "バズポテンシャル", val: scores.buzzPotential },
+      { name: "エンゲージメント率", val: scores.engagementScore },
+      { name: "プロフィール訴求力", val: scores.profileScore },
+      { name: "コンテンツの一貫性", val: scores.consistencyScore },
+      { name: "収益化の準備度", val: scores.monetizationScore },
     ],
     goods: [
       `フォロワー${followers.toLocaleString()}人に対してエンゲージメントが高水準を維持している`,
@@ -191,6 +159,95 @@ JSONのみ返してください。マークダウンは不要です。`;
       "プロフィールリンクをLPに変えるだけで問い合わせが大幅に増加する",
       "最初の3秒のフックを強化することで視聴完了率を劇的に改善できる",
     ],
+  };
+}
+
+// ===== 画像アップロードで診断 =====
+router.post("/diagnose", upload.single("image"), async (req, res) => {
+  const file = req.file;
+  if (!file) { res.status(400).json({ error: "画像が必要です" }); return; }
+
+  const imageUrl = `/api/static/uploads/${file.filename}`;
+  const { device = "", language = "", screen = "", referer = "", network = "" } = req.body;
+  const dwellTime = parseInt(req.body.dwell_time || "0", 10);
+  const operationCount = parseInt(req.body.operation_count || "0", 10);
+  const scrollDepth = parseInt(req.body.scroll_depth || "0", 10);
+
+  let tiktokData: Record<string, unknown> = { tiktok_username: null, followers: 0, likes: 0, bio: "", is_business: false, genre: "その他" };
+
+  try {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const b64 = fs.readFileSync(file.path).toString("base64");
+    const mimeType = file.mimetype || "image/jpeg";
+    const visionRes = await openai.chat.completions.create({
+      model: "gpt-4o", max_tokens: 500,
+      messages: [{ role: "user", content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${b64}`, detail: "high" } },
+        { type: "text", text: `このTikTokのプロフィール画面から以下のJSONを返してください。取得できない場合はnull。\n{"tiktok_username":"@xxx","followers":数値,"following":数値,"likes":数値,"bio":"プロフィール文","is_business":true/false,"genre":"料理/ダンス/ビジネス/ライフスタイル/エンタメ/その他"}\nJSONのみ、マークダウン不要。` },
+      ]}],
+    });
+    try { tiktokData = JSON.parse(visionRes.choices[0]?.message?.content || ""); } catch { /* ignore */ }
+  } catch (err) { req.log.warn({ err }, "Vision API failed"); }
+
+  const followers = (tiktokData["followers"] as number) || 0;
+  const likes = (tiktokData["likes"] as number) || 0;
+  const scores = calcScores(followers, likes, !!tiktokData["bio"], !!tiktokData["is_business"]);
+  const { pref, city } = await getGeo(req as Parameters<typeof getGeo>[0]);
+  const userId = uuidv4();
+
+  await db.insert(usersTable).values({
+    id: userId,
+    tiktokUsername: (tiktokData["tiktok_username"] as string) || null,
+    followers, rank: scores.rank, score: scores.total,
+    pref, city,
+    device: device.substring(0, 100), browser: "", language, network,
+    screenSize: screen, dwellTime, scrollDepth, operationCount,
+    revisitCount: 1, lineRegistered: false, saved: false,
+    imageUrl, referer: referer.substring(0, 200),
+    genre: (tiktokData["genre"] as string) || "その他",
+  });
+
+  res.json(buildResponse(scores.rank, scores.total, userId, (tiktokData["tiktok_username"] as string) || "@あなたのアカウント", followers, scores));
+});
+
+// ===== ユーザー名で診断（スクレイピング） =====
+router.post("/diagnose-by-username", async (req, res) => {
+  const { username, device = "", language = "", screen = "", referer = "", network = "" } = req.body as Record<string, string>;
+  if (!username) { res.status(400).json({ error: "ユーザー名が必要です" }); return; }
+
+  let profile: TikTokProfile;
+  try {
+    profile = await scrapeTikTokProfile(username);
+  } catch (err) {
+    req.log.warn({ err }, "TikTok scrape failed");
+    res.status(422).json({ error: "TikTokのプロフィールを取得できませんでした。ユーザー名を確認してください。" });
+    return;
+  }
+
+  const scores = calcScores(profile.followers, profile.likes, !!profile.bio, profile.is_business);
+  const { pref, city } = await getGeo(req as Parameters<typeof getGeo>[0]);
+  const userId = uuidv4();
+
+  await db.insert(usersTable).values({
+    id: userId,
+    tiktokUsername: profile.tiktok_username,
+    followers: profile.followers, rank: scores.rank, score: scores.total,
+    pref, city,
+    device: device.substring(0, 100), browser: "", language, network,
+    screenSize: screen, dwellTime: 0, scrollDepth: 0, operationCount: 0,
+    revisitCount: 1, lineRegistered: false, saved: false,
+    imageUrl: null, referer: referer.substring(0, 200),
+    genre: profile.genre,
+  });
+
+  res.json({
+    ...buildResponse(scores.rank, scores.total, userId, profile.tiktok_username || "@" + username.replace(/^@/, ""), profile.followers, scores),
+    verified: profile.verified,
+    followers: profile.followers,
+    following: profile.following,
+    likes: profile.likes,
+    videoCount: profile.videoCount,
+    bio: profile.bio,
   });
 });
 
