@@ -26,6 +26,7 @@ export const usersTable = pgTable("tiktok_users", {
   referer: text("referer"),
   genre: text("genre"),
   apiCostUsd: numeric("api_cost_usd", { precision: 10, scale: 6 }).default("0"),
+  lineUserId: text("line_user_id"),
 });
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ createdAt: true });
