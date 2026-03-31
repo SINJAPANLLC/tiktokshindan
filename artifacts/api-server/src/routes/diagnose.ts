@@ -506,7 +506,7 @@ router.post("/diagnose-by-username", async (req, res) => {
       buzzPotential: s.buzzPotential, engagementScore: s.engagementScore,
       profileScore: s.profileScore, consistencyScore: s.consistencyScore,
       monetizationScore: s.monetizationScore, total: s.total,
-      goods: [], bads: [], nexts: [],
+      goods: [], bads: [], nexts: [], costUsd: 0,
     };
   }
 
